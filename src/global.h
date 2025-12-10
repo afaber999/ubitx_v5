@@ -10,13 +10,13 @@
 // ============================================================================
 // ubitx_v5.1_code.ino
 // ============================================================================
-void active_delay(int delay_by);
-void setTXFilters(unsigned long freq);
-void setTXFilters_v5(unsigned long freq);
-void setFrequency(unsigned long f);
+void active_delay(uint32_t delay_by);
+void setTXFilters(uint32_t freq);
+void setTXFilters_v5(uint32_t freq);
+void setFrequency(uint32_t f);
 void startTx(uint8_t txMode);
 void stopTx();
-void ritEnable(unsigned long f);
+void ritEnable(uint32_t f);
 void ritDisable();
 void checkPTT();
 void checkButton();
@@ -32,9 +32,9 @@ void loop();
 int btnDown();
 void initMeter();
 void drawMeter(int8_t needle);
-void printLine(char linenmbr, char *c);
-void printLine1(char *c);
-void printLine2(char *c);
+void printLine(int linenmbr, const char *c);
+void printLine1(const char *c);
+void printLine2(const char *c);
 void updateDisplay();
 uint8_t enc_state(void);
 int enc_read(void);
@@ -52,8 +52,9 @@ void initOscillators();
 // ============================================================================
 // ubitx_menu.ino
 // ============================================================================
+void calibrateClock();
+
 int getValueByKnob(int minimum, int maximum, int step_size, int initial, char *prefix, char *postfix);
-int menuBand(int btn);
 void menuRitToggle(int btn);
 void menuVfoToggle(int btn);
 void menuSidebandToggle(int btn);
@@ -61,9 +62,7 @@ void menuSplitToggle(int btn);
 int menuCWSpeed(int btn);
 void menuExit(int btn);
 int menuSetup(int btn);
-int calibrateClock();
-int menuSetupCalibration(int btn);
-void printCarrierFreq(unsigned long freq);
+void printCarrierFreq(uint32_t freq);
 void menuSetupCarrier(int btn);
 void menuSetupCwTone(int btn);
 void menuSetupCwDelay(int btn);
@@ -93,10 +92,21 @@ uint8_t setHighNibble(uint8_t b, uint8_t v);
 uint8_t setLowNibble(uint8_t b, uint8_t v);
 uint8_t getHighNibble(uint8_t b);
 uint8_t getLowNibble(uint8_t b);
-void getDecimalDigits(unsigned long number, uint8_t *result, int digits);
-void writeFreq(unsigned long freq, uint8_t *cmd);
-unsigned long readFreq(uint8_t *cmd);
+void getDecimalDigits(uint32_t number, uint8_t *result, int digits);
+void writeFreq(uint32_t freq, uint8_t *cmd);
+uint32_t readFreq(uint8_t *cmd);
 void processCATCommand2(uint8_t *cmd);
 void checkCAT();
+
+typedef struct
+{
+    uint32_t vfoA;
+    uint32_t vfoB;
+    bool ritOn;
+    int cwSpeed;
+
+} settings_t;
+
+extern settings_t settings;
 
 #endif // GLOBAL_H
