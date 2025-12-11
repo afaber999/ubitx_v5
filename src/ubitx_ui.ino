@@ -122,7 +122,7 @@ void updateDisplay()
 
   if (inTx)
   {
-    if (cwTimeout > 0)
+    if (settings.cwTimeout > 0)
       strcpy(c, "   CW:");
     else
       strcpy(c, "   TX:");

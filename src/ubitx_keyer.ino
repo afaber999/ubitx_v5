@@ -72,7 +72,7 @@ uint8_t getPaddle()
 /**
  * Starts transmitting the carrier with the sidetone
  * It assumes that we have called cwTxStart and not called cwTxStop
- * each time it is called, the cwTimeOut is pushed further into the future
+ * each time it is called, the settings.cwTimeOut is pushed further into the future
  */
 void cwKeydown()
 {
@@ -81,13 +81,13 @@ void cwKeydown()
   digitalWrite(CW_KEY, 1);
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
-  // cwTimeout = millis() + CW_TIMEOUT;
-  cwTimeout = millis() + cwDelayTime * 10;
+  // settings.cwTimeout = millis() + CW_TIMEOUT;
+  settings.cwTimeout = millis() + cwDelayTime * 10;
 }
 
 /**
  * Stops the cw carrier transmission along with the sidetone
- * Pushes the cwTimeout further into the future
+ * Pushes the settings.cwTimeout further into the future
  */
 void cwKeyUp()
 {
@@ -96,8 +96,8 @@ void cwKeyUp()
   digitalWrite(CW_KEY, 0);
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
-  // cwTimeout = millis() + CW_TIMEOUT;
-  cwTimeout = millis() + cwDelayTime * 10;
+  // settings.cwTimeout = millis() + CW_TIMEOUT;
+  settings.cwTimeout = millis() + cwDelayTime * 10;
 }
 
 // Variables for Ron's new logic
@@ -177,9 +177,9 @@ void cwKeyer(void)
         }
         else
         {
-          if (0 < cwTimeout && cwTimeout < millis())
+          if (0 < settings.cwTimeout && settings.cwTimeout < millis())
           {
-            cwTimeout = 0;
+            settings.cwTimeout = 0;
             stopTx();
           }
           continue_loop = false;
@@ -219,7 +219,7 @@ void cwKeyer(void)
           active_delay(delayBeforeCWStartTime * 2);
 
           keyDown = 0;
-          cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
+          settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
         ktimer += millis();               // set ktimer to interval end time
@@ -277,7 +277,7 @@ void cwKeyer(void)
           active_delay(delayBeforeCWStartTime * 2);
 
           keyDown = 0;
-          cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
+          settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
         cwKeydown();
@@ -289,13 +289,13 @@ void cwKeyer(void)
       }
       else
       {
-        if (0 < cwTimeout && cwTimeout < millis())
+        if (0 < settings.cwTimeout && settings.cwTimeout < millis())
         {
-          cwTimeout = 0;
+          settings.cwTimeout = 0;
           keyDown = 0;
           stopTx();
         }
-        // if (!cwTimeout) //removed by KD8CEC
+        // if (!settings.cwTimeout) //removed by KD8CEC
         //    return;
         //  got back to the beginning of the loop, if no further activity happens on straight key
         //  we will time out, and return out of this routine

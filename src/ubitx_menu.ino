@@ -20,8 +20,10 @@ static uint8_t menuOn = 0; // set to 1 when the menu is being displayed, if a me
 
 static void menuSetupCalibration(int btn);
 static void menuBand(int btn);
+static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix);
+static void menuCWSpeed(int btn);
 
-int getValueByKnob(int minimum, int maximum, int step_size, int initial, char *prefix, char *postfix)
+static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix)
 {
   int knob = 0;
   int knob_value;
@@ -252,21 +254,21 @@ void menuSplitToggle(int btn)
 {
   if (!btn)
   {
-    if (splitOn == 0)
+    if (!settings.splitOn)
       printLine2("Split Off \x7E On");
     else
       printLine2("Split On \x7E Off");
   }
   else
   {
-    if (splitOn == 1)
+    if (settings.splitOn)
     {
-      splitOn = 0;
+      settings.splitOn = false;
       printLine2("Split ON");
     }
     else
     {
-      splitOn = 1;
+      settings.splitOn = true;
       if (settings.ritOn == 1)
         settings.ritOn = 0;
       printLine2("Split Off");
@@ -278,7 +280,7 @@ void menuSplitToggle(int btn)
   }
 }
 
-int menuCWSpeed(int btn)
+static void menuCWSpeed(int btn)
 {
   int wpm;
 
@@ -395,7 +397,6 @@ extern uint32_t si5351bx_vcoa;
 void calibrateClock()
 {
   int knob = 0;
-  int32_t prev_calibration;
 
   // keep clear of any previous button press
   while (btnDown())
@@ -406,7 +407,6 @@ void calibrateClock()
   digitalWrite(TX_LPF_B, 0);
   digitalWrite(TX_LPF_C, 0);
 
-  prev_calibration = calibration;
   calibration = 0;
 
   isUSB = true;
@@ -446,7 +446,7 @@ void calibrateClock()
     printLine2(b);
   }
 
-  cwTimeout = 0;
+  settings.cwTimeout = 0;
   keyDown = 0;
   stopTx();
 
@@ -494,7 +494,6 @@ void printCarrierFreq(uint32_t freq)
 void menuSetupCarrier(int btn)
 {
   int knob = 0;
-  uint32_t prevCarrier;
 
   if (!btn)
   {
@@ -502,7 +501,6 @@ void menuSetupCarrier(int btn)
     return;
   }
 
-  prevCarrier = usbCarrier;
   printLine1("Tune to best Signal");
   printLine2("Press to confirm. ");
   active_delay(1000);

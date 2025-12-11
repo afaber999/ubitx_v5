@@ -82,6 +82,9 @@ settings_t settings;
 #define ANALOG_KEYER (A6)
 #define ANALOG_SPARE (A7)
 
+// function prototypes for functions used only in this file
+static void checkButton();
+
 /**
  * The Raduino board is the size of a standard 16x2 LCD panel. It has three connectors:
  *
@@ -202,11 +205,9 @@ unsigned char keyerControl = IAMBICB;
  */
 boolean txCAT = false;         // turned on if the transmitting due to a CAT command
 char inTx = 0;                 // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
-char splitOn = 0;              // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
 char keyDown = 0;              // in cw mode, denotes the carrier is being transmitted
 char isUSB = 0;                // upper sideband was selected, this is reset to the default for the
                                // frequency when it crosses the frequency border of 10 MHz
-uint32_t cwTimeout = 0;        // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
 uint32_t dbgCount = 0;         // not used now
 unsigned char txFilter = 0;    // which of the four transmit filters are in use
 boolean modeCalibrate = false; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
@@ -368,7 +369,7 @@ void startTx(uint8_t txMode)
   }
   else
   {
-    if (splitOn == 1)
+    if (settings.splitOn)
     {
       if (vfoActive == VFO_B)
       {
@@ -414,7 +415,7 @@ void stopTx()
     setFrequency(ritRxFrequency);
   else
   {
-    if (splitOn == 1)
+    if (settings.splitOn)
     {
       // vfo Change
       if (vfoActive == VFO_B)
@@ -471,7 +472,7 @@ void ritDisable()
 void checkPTT()
 {
   // we don't check for ptt when transmitting cw
-  if (cwTimeout > 0)
+  if (settings.cwTimeout > 0)
     return;
 
   if (digitalRead(PTT) == 0 && inTx == 0)
@@ -484,10 +485,8 @@ void checkPTT()
     stopTx();
 }
 
-void checkButton()
+static void checkButton()
 {
-  int t1, t2;
-
   // only if the button is pressed
   if (!btnDown())
     return;
@@ -691,6 +690,7 @@ void setup()
   settings.vfoA = 7150000L;
   settings.vfoB = 14200000L;
   settings.ritOn = false;
+  settings.splitOn = false;
 
   settings.cwSpeed = 100; // this is actuall the dot period in milliseconds
 

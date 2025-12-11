@@ -259,7 +259,7 @@ void catReadEEPRom(void)
     // 7A  6 ? ?
     // 7A  7 SPL On/Off  0 = Off, 1 = On
 
-    cat[0] = (splitOn ? 0xFF : 0x7F);
+    cat[0] = (settings.splitOn ? 0xFF : 0x7F);
     break;
   case 0xB3: //
     cat[0] = 0x00;
@@ -296,11 +296,11 @@ void processCATCommand2(uint8_t *cmd)
 
   case 0x02:
     // split on
-    splitOn = 1;
+    settings.splitOn = true;
     break;
   case 0x82:
     // split off
-    splitOn = 0;
+    settings.splitOn = false;
     break;
 
   case 0x03:
@@ -373,8 +373,8 @@ void processCATCommand2(uint8_t *cmd)
 
   case 0xf7:
   {
-    boolean isHighSWR = false;
-    boolean isSplitOn = false;
+    bool isHighSWR = false;
+    bool isSplitOn = false;
 
     /*
       Inverted -> *ptt = ((p->tx_status & 0x80) == 0); <-- souce code in ft817.c (hamlib)

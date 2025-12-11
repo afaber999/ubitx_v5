@@ -19,7 +19,6 @@ void stopTx();
 void ritEnable(uint32_t f);
 void ritDisable();
 void checkPTT();
-void checkButton();
 void doTuning();
 void doRIT();
 void initSettings();
@@ -54,12 +53,10 @@ void initOscillators();
 // ============================================================================
 void calibrateClock();
 
-int getValueByKnob(int minimum, int maximum, int step_size, int initial, char *prefix, char *postfix);
 void menuRitToggle(int btn);
 void menuVfoToggle(int btn);
 void menuSidebandToggle(int btn);
 void menuSplitToggle(int btn);
-int menuCWSpeed(int btn);
 void menuExit(int btn);
 int menuSetup(int btn);
 void printCarrierFreq(uint32_t freq);
@@ -104,6 +101,8 @@ typedef struct
     uint32_t vfoB;
     bool ritOn;
     int cwSpeed;
+    bool splitOn;           // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
+    uint32_t cwTimeout = 0; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
 
 } settings_t;
 
