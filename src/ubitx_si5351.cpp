@@ -27,6 +27,10 @@
 // A value of zero gives a divide factor of 1, a value of 7 divides by 128.
 // This lightweight method is a reasonable compromise for a seldom used feature.
 
+#include <global.h>
+#include <Wire.h>
+
+
 static void i2cWrite(uint8_t reg, uint8_t val);
 static void i2cWriten(uint8_t reg, uint8_t *vals, uint8_t vcnt);
 static void si5351bx_init();

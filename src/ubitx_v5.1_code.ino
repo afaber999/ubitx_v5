@@ -119,30 +119,6 @@ char bBuf[30];
 char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 int count = 0;         // to generally count ticks, loops, etc
 
-/**
- * These are the indices where these user changable settinngs are stored  in the EEPROM
- */
-#define MASTER_CAL 0
-#define LSB_CAL 4
-#define USB_CAL 8
-#define SIDE_TONE 12
-// these are ids of the vfos as well as their offset into the eeprom storage, don't change these 'magic' values
-#define VFO_A 16
-#define VFO_B 20
-#define CW_SIDETONE 24
-#define CW_SPEED 28
-
-// These are defines for the new features back-ported from KD8CEC's software
-// these start from beyond 256 as Ian, KD8CEC has kept the first 256 uint8_ts free for the base version
-#define VFO_A_MODE 256 // 2: LSB, 3: USB
-#define VFO_B_MODE 257
-
-// values that are stroed for the VFO modes
-#define VFO_MODE_LSB 2
-#define VFO_MODE_USB 3
-
-// handkey, iambic a, iambic b : 0,1,2f
-#define CW_KEY_TYPE 358
 
 /**
  * The uBITX is an upconnversion transceiver. The first IF is at 45 MHz.
@@ -166,16 +142,10 @@ int count = 0;         // to generally count ticks, loops, etc
 #define LOWEST_FREQ (100000l)
 #define HIGHEST_FREQ (30000000l)
 
-// we directly generate the CW by programmin the Si5351 to the cw tx frequency, hence, both are different modes
-// these are the parameter passed to startTx
-#define TX_SSB 0
-#define TX_CW 1
-
-char vfoActive = VFO_A;
 int8_t meter_reading = 0; // a -1 on meter makes it invisible
-uint32_t sideTone = 800, usbCarrier;
+uint32_t usbCarrier;
 char isUsbVfoA = 0, isUsbVfoB = 1;
-uint32_t frequency, ritRxFrequency, ritTxFrequency; // frequency is the current frequency on the dial
+uint32_t ritRxFrequency, ritTxFrequency; // frequency is the current frequency on the dial
 uint32_t firstIF = 45005000L;
 
 // these are variables that control the keyer behaviour
@@ -187,11 +157,10 @@ unsigned char keyerControl = IAMBICB;
 /**
  * Raduino needs to keep track of current state of the transceiver. These are a few variables that do it
  */
-boolean txCAT = false;         // turned on if the transmitting due to a CAT command
-                               // frequency when it crosses the frequency border of 10 MHz
-uint32_t dbgCount = 0;         // not used now
-unsigned char txFilter = 0;    // which of the four transmit filters are in use
-                               // beat frequency
+// frequency when it crosses the frequency border of 10 MHz
+uint32_t dbgCount = 0;      // not used now
+unsigned char txFilter = 0; // which of the four transmit filters are in use
+                            // beat frequency
 
 /**
  * Below are the basic functions that control the uBitx. Understanding the functions before
@@ -326,7 +295,7 @@ void setFrequency(uint32_t f)
     si5351bx_setfreq(1, firstIF - usbCarrier);
   }
 
-  frequency = f;
+  settings.frequency = f;
 }
 
 /**
@@ -344,27 +313,27 @@ void startTx(uint8_t txMode)
   if (settings.ritOn)
   {
     // save the current as the rx frequency
-    ritRxFrequency = frequency;
+    ritRxFrequency = settings.frequency;
     setFrequency(ritTxFrequency);
   }
   else
   {
     if (settings.splitOn)
     {
-      if (vfoActive == VFO_B)
+      if (settings.vfoActive == VFO_B)
       {
-        vfoActive = VFO_A;
+        settings.vfoActive = VFO_A;
         settings.isUSB = isUsbVfoA;
-        frequency = settings.vfoA;
+        settings.frequency = settings.vfoA;
       }
-      else if (vfoActive == VFO_A)
+      else if (settings.vfoActive == VFO_A)
       {
-        vfoActive = VFO_B;
-        frequency = settings.vfoB;
+        settings.vfoActive = VFO_B;
+        settings.frequency = settings.vfoB;
         settings.isUSB = isUsbVfoB;
       }
     }
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
   }
 
   if (txMode == TX_CW)
@@ -377,9 +346,9 @@ void startTx(uint8_t txMode)
     // the key up and key down will toggle the carrier unbalancing
     // the exact cw frequency is the tuned frequency + sidetone
     if (settings.isUSB)
-      si5351bx_setfreq(2, frequency + sideTone);
+      si5351bx_setfreq(2, settings.frequency + settings.sideTone);
     else
-      si5351bx_setfreq(2, frequency - sideTone);
+      si5351bx_setfreq(2, settings.frequency - settings.sideTone);
   }
   updateDisplay();
 }
@@ -398,20 +367,20 @@ void stopTx()
     if (settings.splitOn)
     {
       // vfo Change
-      if (vfoActive == VFO_B)
+      if (settings.vfoActive == VFO_B)
       {
-        vfoActive = VFO_A;
-        frequency = settings.vfoA;
+        settings.vfoActive = VFO_A;
+        settings.frequency = settings.vfoA;
         settings.isUSB = isUsbVfoA;
       }
-      else if (vfoActive == VFO_A)
+      else if (settings.vfoActive == VFO_A)
       {
-        vfoActive = VFO_B;
-        frequency = settings.vfoB;
+        settings.vfoActive = VFO_B;
+        settings.frequency = settings.vfoB;
         settings.isUSB = isUsbVfoB;
       }
     }
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
   }
   updateDisplay();
 }
@@ -496,28 +465,28 @@ void doTuning()
   s = enc_read();
   if (s != 0)
   {
-    prev_freq = frequency;
+    prev_freq = settings.frequency;
 
     if (s > 4)
-      frequency += 10000l;
+      settings.frequency += 10000l;
     else if (s > 2)
-      frequency += 500;
+      settings.frequency += 500;
     else if (s > 0)
-      frequency += 50l;
+      settings.frequency += 50l;
     else if (s > -2)
-      frequency -= 50l;
+      settings.frequency -= 50l;
     else if (s > -4)
-      frequency -= 500l;
+      settings.frequency -= 500l;
     else
-      frequency -= 10000l;
+      settings.frequency -= 10000l;
 
-    if (prev_freq < 10000000l && frequency > 10000000l)
+    if (prev_freq < 10000000l && settings.frequency > 10000000l)
       settings.isUSB = true;
 
-    if (prev_freq > 10000000l && frequency < 10000000l)
+    if (prev_freq > 10000000l && settings.frequency < 10000000l)
       settings.isUSB = false;
 
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
     updateDisplay();
   }
 }
@@ -528,16 +497,16 @@ void doTuning()
 void doRIT()
 {
   int knob = enc_read();
-  uint32_t old_freq = frequency;
+  uint32_t old_freq = settings.frequency;
 
   if (knob < 0)
-    frequency -= 100l;
+    settings.frequency -= 100l;
   else if (knob > 0)
-    frequency += 100;
+    settings.frequency += 100;
 
-  if (old_freq != frequency)
+  if (old_freq != settings.frequency)
   {
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
     updateDisplay();
   }
 }
@@ -556,7 +525,7 @@ void initSettings()
   EEPROM.get(USB_CAL, usbCarrier);
   EEPROM.get(VFO_A, settings.vfoA);
   EEPROM.get(VFO_B, settings.vfoB);
-  EEPROM.get(CW_SIDETONE, sideTone);
+  EEPROM.get(CW_SIDETONE, settings.sideTone);
   EEPROM.get(CW_SPEED, settings.cwSpeed);
 
   if (usbCarrier > 11060000l || usbCarrier < 11048000l)
@@ -565,8 +534,8 @@ void initSettings()
     settings.vfoA = 7150000l;
   if (settings.vfoB > 35000000l || 3500000l > settings.vfoB)
     settings.vfoB = 14150000l;
-  if (sideTone < 100 || 2000 < sideTone)
-    sideTone = 800;
+  if (settings.sideTone < 100 || 2000 < settings.sideTone)
+    settings.sideTone = 800;
   if (settings.cwSpeed < 10 || 1000 < settings.cwSpeed)
     settings.cwSpeed = 100;
 
@@ -681,6 +650,10 @@ void setup()
 
   settings.cwDelayTime = 60;
 
+  settings.txCAT = false;
+  settings.sideTone = 800;
+  settings.vfoActive = VFO_A;
+
   Serial.begin(38400);
   Serial.flush();
 
@@ -696,7 +669,7 @@ void setup()
   initPorts();
   initOscillators();
 
-  frequency = settings.vfoA;
+  settings.frequency = settings.vfoA;
   setFrequency(settings.vfoA);
   updateDisplay();
 
@@ -713,7 +686,7 @@ void loop()
 {
 
   cwKeyer();
-  if (!txCAT)
+  if (!settings.txCAT)
     checkPTT();
   checkButton();
 

@@ -87,19 +87,59 @@ uint32_t readFreq(uint8_t *cmd);
 void processCATCommand2(uint8_t *cmd);
 void checkCAT();
 
+// we directly generate the CW by programmin the Si5351 to the cw tx frequency, hence, both are different modes
+// these are the parameter passed to startTx
+#define TX_SSB 0
+#define TX_CW 1
+
+/***********************************************************************************************************************
+ * These are the indices where these user changable settinngs are stored  in the EEPROM
+ */
+#define MASTER_CAL 0
+#define LSB_CAL 4
+#define USB_CAL 8
+#define SIDE_TONE 12
+// these are ids of the vfos as well as their offset into the eeprom storage, don't change these 'magic' values
+#define VFO_A 16
+#define VFO_B 20
+#define CW_SIDETONE 24
+#define CW_SPEED 28
+
+// These are defines for the new features back-ported from KD8CEC's software
+// these start from beyond 256 as Ian, KD8CEC has kept the first 256 uint8_ts free for the base version
+#define VFO_A_MODE 256 // 2: LSB, 3: USB
+#define VFO_B_MODE 257
+
+// values that are stroed for the VFO modes
+#define VFO_MODE_LSB 2
+#define VFO_MODE_USB 3
+
+// handkey, iambic a, iambic b : 0,1,2f
+#define CW_KEY_TYPE 358
+
+/***********************************************************************************************************************
+ * EEPROM END
+ */
+
+
 typedef struct
 {
     uint32_t vfoA;
     uint32_t vfoB;
     bool ritOn;
     int cwSpeed;
-    bool splitOn;           // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
-    uint32_t cwTimeout = 0; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
+    bool splitOn;       // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
+    uint32_t cwTimeout; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
     uint8_t cwDelayTime;
 
-    bool inTx = false;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
-    bool keyDown = false; // in cw mode, denotes the carrier is being transmitted
-    bool isUSB = false;   // upper sideband was selected, this is reset to the default for the
+    bool inTx;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
+    bool keyDown; // in cw mode, denotes the carrier is being transmitted
+    bool isUSB;   // upper sideband was selected, this is reset to the default for the
+    bool txCAT;   // turned on if the transmitting due to a CAT command
+
+    uint32_t frequency;
+    uint32_t sideTone;
+    char vfoActive;
 
 } settings_t;
 
@@ -107,5 +147,6 @@ extern settings_t settings;
 extern char cBuf[30];
 extern char bBuf[30];
 extern char printBuff[2][31]; // mirrors what is showing on the two lines of the display
+extern uint32_t usbCarrier;
 
 #endif // GLOBAL_H

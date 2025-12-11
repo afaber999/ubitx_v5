@@ -111,11 +111,11 @@ static void menuBand(int btn)
       else
         settings.isUSB = false;
       setFrequency(((uint32_t)band * 1000000l) + offset); */
-      if (knob < 0 && frequency > 3000000l)
-        setFrequency(frequency - 200000l);
-      if (knob > 0 && frequency < 30000000l)
-        setFrequency(frequency + 200000l);
-      if (frequency > 10000000l)
+      if (knob < 0 && settings.frequency > 3000000l)
+        setFrequency(settings.frequency - 200000l);
+      if (knob > 0 && settings.frequency < 30000000l)
+        setFrequency(settings.frequency + 200000l);
+      if (settings.frequency > 10000000l)
         settings.isUSB = true;
       else
         settings.isUSB = false;
@@ -149,7 +149,7 @@ void menuRitToggle(int btn)
     if (settings.ritOn == 0)
     {
       // enable RIT so the current frequency is used at transmit
-      ritEnable(frequency);
+      ritEnable(settings.frequency);
       printLine2("RIT is On");
     }
     else
@@ -170,46 +170,46 @@ void menuVfoToggle(int btn)
 
   if (!btn)
   {
-    if (vfoActive == VFO_A)
+    if (settings.vfoActive == VFO_A)
       printLine2("VFO A \x7E B");
     else
       printLine2("VFO B \x7E A");
   }
   else
   {
-    if (vfoActive == VFO_B)
+    if (settings.vfoActive == VFO_B)
     {
-      settings.vfoB = frequency;
+      settings.vfoB = settings.frequency;
       isUsbVfoB = settings.isUSB;
-      EEPROM.put(VFO_B, frequency);
+      EEPROM.put(VFO_B, settings.frequency);
       if (isUsbVfoB)
         EEPROM.put(VFO_B_MODE, VFO_MODE_USB);
       else
         EEPROM.put(VFO_B_MODE, VFO_MODE_LSB);
 
-      vfoActive = VFO_A;
+      settings.vfoActive = VFO_A;
       //      printLine2("Selected VFO A  ");
-      frequency = settings.vfoA;
+      settings.frequency = settings.vfoA;
       settings.isUSB = isUsbVfoA;
     }
     else
     {
-      settings.vfoA = frequency;
+      settings.vfoA = settings.frequency;
       isUsbVfoA = settings.isUSB;
-      EEPROM.put(VFO_A, frequency);
+      EEPROM.put(VFO_A, settings.frequency);
       if (isUsbVfoA)
         EEPROM.put(VFO_A_MODE, VFO_MODE_USB);
       else
         EEPROM.put(VFO_A_MODE, VFO_MODE_LSB);
 
-      vfoActive = VFO_B;
+      settings.vfoActive = VFO_B;
       //      printLine2("Selected VFO B  ");
-      frequency = settings.vfoB;
+      settings.frequency = settings.vfoB;
       settings.isUSB = isUsbVfoB;
     }
 
     ritDisable();
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
     updateDisplay();
     printLine2("");
     // exit the menu
@@ -244,7 +244,7 @@ void menuSidebandToggle(int btn)
       printLine2("");
     }
     // Added by KD8CEC
-    if (vfoActive == VFO_B)
+    if (settings.vfoActive == VFO_B)
     {
       isUsbVfoB = settings.isUSB;
     }
@@ -462,7 +462,7 @@ void calibrateClock()
   printLine2("Calibration set!");
   EEPROM.put(MASTER_CAL, calibration);
   initOscillators();
-  setFrequency(frequency);
+  setFrequency(settings.frequency);
   updateDisplay();
 
   while (btnDown())
@@ -541,7 +541,7 @@ void menuSetupCarrier(int btn)
   active_delay(1000);
 
   si5351bx_setfreq(0, usbCarrier);
-  setFrequency(frequency);
+  setFrequency(settings.frequency);
   updateDisplay();
   printLine2("");
   menuOn = 0;
@@ -558,26 +558,26 @@ static void menuSetupCwTone(int btn)
     return;
   }
 
-  prev_sideTone = sideTone;
+  prev_sideTone = settings.sideTone;
   printLine1("Tune CW tone");
   printLine2("PTT to confirm. ");
   active_delay(1000);
-  tone(PIN_CW_TONE, sideTone);
+  tone(PIN_CW_TONE, settings.sideTone);
 
   // disable all clock 1 and clock 2
   while (digitalRead(PTT) == HIGH && !btnDown())
   {
     knob = enc_read();
 
-    if (knob > 0 && sideTone < 2000)
-      sideTone += 10;
-    else if (knob < 0 && sideTone > 100)
-      sideTone -= 10;
+    if (knob > 0 && settings.sideTone < 2000)
+      settings.sideTone += 10;
+    else if (knob < 0 && settings.sideTone > 100)
+      settings.sideTone -= 10;
     else
       continue; // don't update the frequency or the display
 
-    tone(PIN_CW_TONE, sideTone);
-    itoa(sideTone, bBuf, 10);
+    tone(PIN_CW_TONE, settings.sideTone);
+    itoa(settings.sideTone, bBuf, 10);
     printLine2(bBuf);
 
     checkCAT();
@@ -587,12 +587,12 @@ static void menuSetupCwTone(int btn)
   // save the setting
   if (digitalRead(PTT) == LOW)
   {
-    printLine2("Sidetone set!    ");
-    EEPROM.put(CW_SIDETONE, sideTone);
+    printLine2("settings.Sidetone set!    ");
+    EEPROM.put(CW_SIDETONE, settings.sideTone);
     active_delay(2000);
   }
   else
-    sideTone = prev_sideTone;
+    settings.sideTone = prev_sideTone;
 
   printLine2("");
   updateDisplay();

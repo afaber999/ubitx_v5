@@ -164,7 +164,7 @@ void catReadEEPRom(void)
     // 5 : Memory/MTUNE select  0 = Memory, 1 = MTUNE
     // 6 :
     // 7 : MEM/VFO Select  0 = Memory, 1 = VFO (A or B - see bit 0)
-    cat[0] = 0x80 + (vfoActive == VFO_B ? 1 : 0);
+    cat[0] = 0x80 + (settings.vfoActive == VFO_B ? 1 : 0);
     cat[1] = 0x00;
     break;
   case 0x57: //
@@ -192,11 +192,11 @@ void catReadEEPRom(void)
     // 5-4 :  Lock Mode (#32) 00 = Dial, 01 = Freq, 10 = Panel
     // 7-6 :  Op Filter (#38) 00 = Off, 01 = SSB, 10 = CW
     // CAT_BUFF[0] = 0x08;
-    cat[0] = (sideTone - 300) / 50;
+    cat[0] = (settings.sideTone - 300) / 50;
     cat[1] = 0x25;
     break;
-  case 0x61: // Sidetone (Volume) (#44)
-    cat[0] = sideTone % 50;
+  case 0x61: // settings.Sidetone (Volume) (#44)
+    cat[0] = settings.sideTone % 50;
     cat[1] = 0x08;
     break;
   case 0x5F: //
@@ -304,7 +304,7 @@ void processCATCommand2(uint8_t *cmd)
     break;
 
   case 0x03:
-    writeFreq(frequency, response); // Put the frequency into the buffer
+    writeFreq(settings.frequency, response); // Put the frequency into the buffer
     if (settings.isUSB)
       response[4] = 0x01; // USB
     else
@@ -320,7 +320,7 @@ void processCATCommand2(uint8_t *cmd)
       settings.isUSB = 1;
     response[0] = 0x00;
     Serial.write(response, 1);
-    setFrequency(frequency);
+    setFrequency(settings.frequency);
     // printLine2("cat: mode changed");
     // updateDisplay();
     break;
@@ -329,7 +329,7 @@ void processCATCommand2(uint8_t *cmd)
     if (!settings.inTx)
     {
       response[0] = 0;
-      txCAT = true;
+      settings.txCAT = true;
       startTx(TX_SSB);
       updateDisplay();
     }
@@ -345,7 +345,7 @@ void processCATCommand2(uint8_t *cmd)
     if (settings.inTx)
     {
       stopTx();
-      txCAT = false;
+      settings.txCAT = false;
     }
     response[0] = 0;
     Serial.write(response, 1);

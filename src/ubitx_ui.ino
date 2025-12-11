@@ -118,7 +118,7 @@ void updateDisplay()
   memset(cBuf, 0, sizeof(cBuf));
   memset(bBuf, 0, sizeof(bBuf));
 
-  ultoa(frequency, bBuf, DEC);
+  ultoa(settings.frequency, bBuf, DEC);
 
   if (settings.inTx)
   {
@@ -138,14 +138,14 @@ void updateDisplay()
       else
         strcpy(cBuf, "LSB ");
     }
-    if (vfoActive == VFO_A) // VFO A is active
+    if (settings.vfoActive == VFO_A) // VFO A is active
       strcat(cBuf, "A:");
     else
       strcat(cBuf, "B:");
   }
 
   // one mhz digit if less than 10 M, two digits if more
-  if (frequency < 10000000l)
+  if (settings.frequency < 10000000l)
   {
     cBuf[6] = ' ';
     cBuf[7] = bBuf[0];
