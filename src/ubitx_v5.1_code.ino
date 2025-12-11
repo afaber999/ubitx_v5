@@ -204,9 +204,6 @@ unsigned char keyerControl = IAMBICB;
  * Raduino needs to keep track of current state of the transceiver. These are a few variables that do it
  */
 boolean txCAT = false;         // turned on if the transmitting due to a CAT command
-char inTx = 0;                 // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
-char keyDown = 0;              // in cw mode, denotes the carrier is being transmitted
-char isUSB = 0;                // upper sideband was selected, this is reset to the default for the
                                // frequency when it crosses the frequency border of 10 MHz
 uint32_t dbgCount = 0;         // not used now
 unsigned char txFilter = 0;    // which of the four transmit filters are in use
@@ -335,7 +332,7 @@ void setFrequency(uint32_t f)
     }
   */
   // alternative to reduce the intermod spur
-  if (isUSB)
+  if (settings.isUSB)
   {
     si5351bx_setfreq(2, firstIF + f);
     si5351bx_setfreq(1, firstIF + usbCarrier);
@@ -359,7 +356,7 @@ void setFrequency(uint32_t f)
 void startTx(uint8_t txMode)
 {
   digitalWrite(TX_RX, 1);
-  inTx = 1;
+  settings.inTx = 1;
 
   if (settings.ritOn)
   {
@@ -374,14 +371,14 @@ void startTx(uint8_t txMode)
       if (vfoActive == VFO_B)
       {
         vfoActive = VFO_A;
-        isUSB = isUsbVfoA;
+        settings.isUSB = isUsbVfoA;
         frequency = settings.vfoA;
       }
       else if (vfoActive == VFO_A)
       {
         vfoActive = VFO_B;
         frequency = settings.vfoB;
-        isUSB = isUsbVfoB;
+        settings.isUSB = isUsbVfoB;
       }
     }
     setFrequency(frequency);
@@ -396,7 +393,7 @@ void startTx(uint8_t txMode)
     // shif the first oscillator to the tx frequency directly
     // the key up and key down will toggle the carrier unbalancing
     // the exact cw frequency is the tuned frequency + sidetone
-    if (isUSB)
+    if (settings.isUSB)
       si5351bx_setfreq(2, frequency + sideTone);
     else
       si5351bx_setfreq(2, frequency - sideTone);
@@ -406,7 +403,7 @@ void startTx(uint8_t txMode)
 
 void stopTx()
 {
-  inTx = 0;
+  settings.inTx = 0;
 
   digitalWrite(TX_RX, 0);          // turn off the tx
   si5351bx_setfreq(0, usbCarrier); // set back the cardrier oscillator anyway, cw tx switches it off
@@ -422,13 +419,13 @@ void stopTx()
       {
         vfoActive = VFO_A;
         frequency = settings.vfoA;
-        isUSB = isUsbVfoA;
+        settings.isUSB = isUsbVfoA;
       }
       else if (vfoActive == VFO_A)
       {
         vfoActive = VFO_B;
         frequency = settings.vfoB;
-        isUSB = isUsbVfoB;
+        settings.isUSB = isUsbVfoB;
       }
     }
     setFrequency(frequency);
@@ -475,13 +472,13 @@ void checkPTT()
   if (settings.cwTimeout > 0)
     return;
 
-  if (digitalRead(PTT) == 0 && inTx == 0)
+  if (digitalRead(PTT) == 0 && settings.inTx == 0)
   {
     startTx(TX_SSB);
     active_delay(50); // debounce the PTT
   }
 
-  if (digitalRead(PTT) == 1 && inTx == 1)
+  if (digitalRead(PTT) == 1 && settings.inTx == 1)
     stopTx();
 }
 
@@ -532,10 +529,10 @@ void doTuning()
       frequency -= 10000l;
 
     if (prev_freq < 10000000l && frequency > 10000000l)
-      isUSB = true;
+      settings.isUSB = true;
 
     if (prev_freq > 10000000l && frequency < 10000000l)
-      isUSB = false;
+      settings.isUSB = false;
 
     setFrequency(frequency);
     updateDisplay();
@@ -629,7 +626,7 @@ void initSettings()
   }
 
   // set the current mode
-  isUSB = isUsbVfoA;
+  settings.isUSB = isUsbVfoA;
 
   /*
    * The keyer type splits into two variables
@@ -693,6 +690,11 @@ void setup()
   settings.splitOn = false;
 
   settings.cwSpeed = 100; // this is actuall the dot period in milliseconds
+  settings.cwTimeout = 0; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
+
+  settings.inTx = false;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
+  settings.keyDown = false; // in cw mode, denotes the carrier is being transmitted
+  settings.isUSB = false;   // upper sideband was selected, this is reset to the default for the
 
   Serial.begin(38400);
   Serial.flush();
@@ -731,7 +733,7 @@ void loop()
   checkButton();
 
   // tune only when not tranmsitting
-  if (!inTx)
+  if (!settings.inTx)
   {
     if (settings.ritOn)
       doRIT();

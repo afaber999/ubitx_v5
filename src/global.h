@@ -104,6 +104,10 @@ typedef struct
     bool splitOn;           // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
     uint32_t cwTimeout = 0; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
 
+    bool inTx = false;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
+    bool keyDown = false; // in cw mode, denotes the carrier is being transmitted
+    bool isUSB = false;   // upper sideband was selected, this is reset to the default for the
+
 } settings_t;
 
 extern settings_t settings;

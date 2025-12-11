@@ -120,7 +120,7 @@ void updateDisplay()
 
   ultoa(frequency, b, DEC);
 
-  if (inTx)
+  if (settings.inTx)
   {
     if (settings.cwTimeout > 0)
       strcpy(c, "   CW:");
@@ -133,7 +133,7 @@ void updateDisplay()
       strcpy(c, "RIT ");
     else
     {
-      if (isUSB)
+      if (settings.isUSB)
         strcpy(c, "USB ");
       else
         strcpy(c, "LSB ");
@@ -163,7 +163,7 @@ void updateDisplay()
     strncat(c, &b[5], 3);
   }
 
-  if (inTx)
+  if (settings.inTx)
     strcat(c, " TX");
   printLine(1, c);
 
@@ -172,7 +172,7 @@ void updateDisplay()
     memset(c, 0, sizeof(c));
     memset(b, 0, sizeof(b));
 
-    if (inTx)
+    if (settings.inTx)
       strcat(c, "TX ");
     else if (settings.ritOn)
       strcpy(c, "RIT");

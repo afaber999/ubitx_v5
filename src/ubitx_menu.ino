@@ -98,18 +98,18 @@ static void menuBand(int btn)
       if (band < 30 && knob > 0)
         band++;
       if (band > 10)
-        isUSB = true;
+        settings.isUSB = true;
       else
-        isUSB = false;
+        settings.isUSB = false;
       setFrequency(((uint32_t)band * 1000000l) + offset); */
       if (knob < 0 && frequency > 3000000l)
         setFrequency(frequency - 200000l);
       if (knob > 0 && frequency < 30000000l)
         setFrequency(frequency + 200000l);
       if (frequency > 10000000l)
-        isUSB = true;
+        settings.isUSB = true;
       else
-        isUSB = false;
+        settings.isUSB = false;
       updateDisplay();
     }
     checkCAT();
@@ -171,7 +171,7 @@ void menuVfoToggle(int btn)
     if (vfoActive == VFO_B)
     {
       settings.vfoB = frequency;
-      isUsbVfoB = isUSB;
+      isUsbVfoB = settings.isUSB;
       EEPROM.put(VFO_B, frequency);
       if (isUsbVfoB)
         EEPROM.put(VFO_B_MODE, VFO_MODE_USB);
@@ -181,12 +181,12 @@ void menuVfoToggle(int btn)
       vfoActive = VFO_A;
       //      printLine2("Selected VFO A  ");
       frequency = settings.vfoA;
-      isUSB = isUsbVfoA;
+      settings.isUSB = isUsbVfoA;
     }
     else
     {
       settings.vfoA = frequency;
-      isUsbVfoA = isUSB;
+      isUsbVfoA = settings.isUSB;
       EEPROM.put(VFO_A, frequency);
       if (isUsbVfoA)
         EEPROM.put(VFO_A_MODE, VFO_MODE_USB);
@@ -196,7 +196,7 @@ void menuVfoToggle(int btn)
       vfoActive = VFO_B;
       //      printLine2("Selected VFO B  ");
       frequency = settings.vfoB;
-      isUSB = isUsbVfoB;
+      settings.isUSB = isUsbVfoB;
     }
 
     ritDisable();
@@ -213,23 +213,23 @@ void menuSidebandToggle(int btn)
 {
   if (!btn)
   {
-    if (isUSB == true)
+    if (settings.isUSB)
       printLine2("USB \x7E LSB");
     else
       printLine2("LSB \x7E USB");
   }
   else
   {
-    if (isUSB == true)
+    if (settings.isUSB)
     {
-      isUSB = false;
+      settings.isUSB = false;
       printLine2("LSB Selected");
       active_delay(500);
       printLine2("");
     }
     else
     {
-      isUSB = true;
+      settings.isUSB = true;
       printLine2("USB Selected");
       active_delay(500);
       printLine2("");
@@ -237,11 +237,11 @@ void menuSidebandToggle(int btn)
     // Added by KD8CEC
     if (vfoActive == VFO_B)
     {
-      isUsbVfoB = isUSB;
+      isUsbVfoB = settings.isUSB;
     }
     else
     {
-      isUsbVfoB = isUSB;
+      isUsbVfoB = settings.isUSB;
     }
     updateDisplay();
     menuOn = 0;
@@ -409,7 +409,7 @@ void calibrateClock()
 
   calibration = 0;
 
-  isUSB = true;
+  settings.isUSB = true;
 
   // turn off the second local oscillator and the bfo
   si5351_set_calibration(calibration);
@@ -424,9 +424,9 @@ void calibrateClock()
   while (!btnDown())
   {
 
-    if (digitalRead(PTT) == LOW && !keyDown)
+    if (digitalRead(PTT) == LOW && !settings.keyDown)
       cwKeydown();
-    if (digitalRead(PTT) == HIGH && keyDown)
+    if (digitalRead(PTT) == HIGH && settings.keyDown)
       cwKeyUp();
 
     knob = enc_read();
@@ -447,7 +447,7 @@ void calibrateClock()
   }
 
   settings.cwTimeout = 0;
-  keyDown = 0;
+  settings.keyDown = 0;
   stopTx();
 
   printLine2("Calibration set!");

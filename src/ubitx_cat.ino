@@ -232,7 +232,7 @@ void catReadEEPRom(void)
     break;
   case 0x69: // FM Mic (#29)  Contains 0-100 (decimal) as displayed
   case 0x78:
-    if (isUSB)
+    if (settings.isUSB)
       cat[0] = CAT_MODE_USB;
     else
       cat[0] = CAT_MODE_LSB;
@@ -305,7 +305,7 @@ void processCATCommand2(uint8_t *cmd)
 
   case 0x03:
     writeFreq(frequency, response); // Put the frequency into the buffer
-    if (isUSB)
+    if (settings.isUSB)
       response[4] = 0x01; // USB
     else
       response[4] = 0x00; // LSB
@@ -315,9 +315,9 @@ void processCATCommand2(uint8_t *cmd)
 
   case 0x07: // set mode
     if (cmd[0] == 0x00 || cmd[0] == 0x03)
-      isUSB = 0;
+      settings.isUSB = 0;
     else
-      isUSB = 1;
+      settings.isUSB = 1;
     response[0] = 0x00;
     Serial.write(response, 1);
     setFrequency(frequency);
@@ -326,7 +326,7 @@ void processCATCommand2(uint8_t *cmd)
     break;
 
   case 0x08: // PTT On
-    if (!inTx)
+    if (!settings.inTx)
     {
       response[0] = 0;
       txCAT = true;
@@ -342,7 +342,7 @@ void processCATCommand2(uint8_t *cmd)
     break;
 
   case 0x88: // PTT OFF
-    if (inTx)
+    if (settings.inTx)
     {
       stopTx();
       txCAT = false;
@@ -379,7 +379,7 @@ void processCATCommand2(uint8_t *cmd)
     /*
       Inverted -> *ptt = ((p->tx_status & 0x80) == 0); <-- souce code in ft817.c (hamlib)
     */
-    response[0] = ((inTx ? 0 : 1) << 7) +
+    response[0] = ((settings.inTx ? 0 : 1) << 7) +
                   ((isHighSWR ? 1 : 0) << 6) + // hi swr off / on
                   ((isSplitOn ? 1 : 0) << 5) + // Split on / off
                   (0 << 4) +                   // dummy data

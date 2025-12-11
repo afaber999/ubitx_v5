@@ -76,7 +76,7 @@ uint8_t getPaddle()
  */
 void cwKeydown()
 {
-  keyDown = 1; // tracks the CW_KEY
+  settings.keyDown = 1; // tracks the CW_KEY
   tone(CW_TONE, (int)sideTone);
   digitalWrite(CW_KEY, 1);
 
@@ -91,7 +91,7 @@ void cwKeydown()
  */
 void cwKeyUp()
 {
-  keyDown = 0; // tracks the CW_KEY
+  settings.keyDown = 0; // tracks the CW_KEY
   noTone(CW_TONE);
   digitalWrite(CW_KEY, 0);
 
@@ -213,12 +213,12 @@ void cwKeyer(void)
 
       case KEYED_PREP:
         // modified KD8CEC
-        if (!inTx)
+        if (!settings.inTx)
         {
           // DelayTime Option
           active_delay(delayBeforeCWStartTime * 2);
 
-          keyDown = 0;
+          settings.keyDown = 0;
           settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
@@ -271,12 +271,12 @@ void cwKeyer(void)
       if (update_PaddleLatch(0) == DIT_L)
       {
         // if we are here, it is only because the key is pressed
-        if (!inTx)
+        if (!settings.inTx)
         {
           // DelayTime Option
           active_delay(delayBeforeCWStartTime * 2);
 
-          keyDown = 0;
+          settings.keyDown = 0;
           settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
@@ -292,7 +292,7 @@ void cwKeyer(void)
         if (0 < settings.cwTimeout && settings.cwTimeout < millis())
         {
           settings.cwTimeout = 0;
-          keyDown = 0;
+          settings.keyDown = 0;
           stopTx();
         }
         // if (!settings.cwTimeout) //removed by KD8CEC

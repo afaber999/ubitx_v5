@@ -51,7 +51,7 @@ void factory_alignment()
   }
 
   printLine2("#3:Test 3.5MHz");
-  isUSB = false;
+  settings.isUSB = false;
   setFrequency(3500000l);
   updateDisplay();
 
@@ -75,7 +75,7 @@ void factory_alignment()
   btnWaitForClick();
   printLine2("#5:Test 14MHz");
 
-  isUSB = true;
+  settings.isUSB = true;
   setFrequency(14000000l);
   updateDisplay();
   while (!btnDown())
@@ -98,7 +98,7 @@ void factory_alignment()
   printLine2("Alignment done");
   active_delay(1000);
 
-  isUSB = false;
+  settings.isUSB = false;
   setFrequency(7150000l);
   updateDisplay();
 }
