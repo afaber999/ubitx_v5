@@ -82,7 +82,7 @@ void cwKeydown()
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
   // settings.cwTimeout = millis() + CW_TIMEOUT;
-  settings.cwTimeout = millis() + cwDelayTime * 10;
+  settings.cwTimeout = millis() + (uint32_t)settings.cwDelayTime * 10;
 }
 
 /**
@@ -97,7 +97,7 @@ void cwKeyUp()
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
   // settings.cwTimeout = millis() + CW_TIMEOUT;
-  settings.cwTimeout = millis() + cwDelayTime * 10;
+  settings.cwTimeout = millis() + (uint32_t)settings.cwDelayTime * 10;
 }
 
 // Variables for Ron's new logic
@@ -219,7 +219,7 @@ void cwKeyer(void)
           active_delay(delayBeforeCWStartTime * 2);
 
           settings.keyDown = 0;
-          settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
+          settings.cwTimeout = millis() + (uint32_t)settings.cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
         ktimer += millis();               // set ktimer to interval end time
@@ -277,7 +277,7 @@ void cwKeyer(void)
           active_delay(delayBeforeCWStartTime * 2);
 
           settings.keyDown = 0;
-          settings.cwTimeout = millis() + cwDelayTime * 10; //+ CW_TIMEOUT;
+          settings.cwTimeout = millis() + (uint32_t)settings.cwDelayTime * 10; //+ CW_TIMEOUT;
           startTx(TX_CW);
         }
         cwKeydown();

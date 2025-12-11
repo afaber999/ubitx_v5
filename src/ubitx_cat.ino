@@ -208,7 +208,7 @@ void catReadEEPRom(void)
     cat[1] = 0x08;
     break;
   case 0x60: // CW Delay (10-2500 ms) (#17)  From 1 to 250 (decimal) with each step representing 10 ms
-    cat[0] = cwDelayTime;
+    cat[0] = settings.cwDelayTime;
     cat[1] = 0x32;
     break;
   case 0x62: //

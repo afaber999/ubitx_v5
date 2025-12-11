@@ -16,12 +16,19 @@
 
 #include "global.h"
 
-static uint8_t menuOn = 0; // set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
+static uint8_t menuOn = 0;         // set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
+static bool modeCalibrate = false; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
 
 static void menuSetupCalibration(int btn);
 static void menuBand(int btn);
 static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix);
 static void menuCWSpeed(int btn);
+static void menuReadADC(int btn);
+static void menuSetupKeyer(int btn);
+static void menuSetupCwDelay(int btn);
+static void menuSetupCwTone(int btn);
+static void printCarrierFreq(uint32_t freq);
+static void menuSplitToggle(int btn);
 
 static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix)
 {
@@ -29,7 +36,9 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
   int knob_value;
 
   while (btnDown())
+  {
     active_delay(100);
+  }
 
   active_delay(200);
   knob_value = initial;
@@ -250,7 +259,7 @@ void menuSidebandToggle(int btn)
 
 // Split communication using VFOA and VFOB by KD8CEC
 // Menu #5
-void menuSplitToggle(int btn)
+static void menuSplitToggle(int btn)
 {
   if (!btn)
   {
@@ -475,7 +484,7 @@ static void menuSetupCalibration(int btn)
   calibrateClock();
 }
 
-void printCarrierFreq(uint32_t freq)
+static void printCarrierFreq(uint32_t freq)
 {
 
   memset(cBuf, 0, sizeof(cBuf));
@@ -538,7 +547,7 @@ void menuSetupCarrier(int btn)
   menuOn = 0;
 }
 
-void menuSetupCwTone(int btn)
+static void menuSetupCwTone(int btn)
 {
   int knob = 0;
   int prev_sideTone;
@@ -590,7 +599,7 @@ void menuSetupCwTone(int btn)
   menuOn = 0;
 }
 
-void menuSetupCwDelay(int btn)
+static void menuSetupCwDelay(int btn)
 {
   if (!btn)
   {
@@ -599,7 +608,7 @@ void menuSetupCwDelay(int btn)
   }
 
   active_delay(500);
-  cwDelayTime = getValueByKnob(10, 1000, 50, cwDelayTime, "CW Delay>", " msec");
+  settings.cwDelayTime = getValueByKnob(10, 1000, 50, settings.cwDelayTime, "CW Delay>", " msec");
 
   printLine1("CW Delay Set!");
   printLine2("");
@@ -608,7 +617,7 @@ void menuSetupCwDelay(int btn)
   menuOn = 0;
 }
 
-void menuSetupKeyer(int btn)
+static void menuSetupKeyer(int btn)
 {
   int tmp_key, knob;
 
@@ -677,7 +686,7 @@ void menuSetupKeyer(int btn)
   menuOn = 0;
 }
 
-void menuReadADC(int btn)
+static void menuReadADC(int btn)
 {
   int adc;
 

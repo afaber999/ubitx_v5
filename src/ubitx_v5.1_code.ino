@@ -114,7 +114,8 @@ LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D0, PIN_D1, PIN_D2, PIN_D3);
  * the input and output from the USB port. We must keep a count of the uint8_ts used while reading
  * the serial port as we can easily run out of buffer space. This is done in the serial_in_count variable.
  */
-char cBuf[30], bBuf[30];
+char cBuf[30];
+char bBuf[30];
 char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 int count = 0;         // to generally count ticks, loops, etc
 
@@ -179,7 +180,6 @@ uint32_t firstIF = 45005000L;
 
 // these are variables that control the keyer behaviour
 extern int32_t calibration;
-uint8_t cwDelayTime = 60;
 bool Iambic_Key = true;
 #define IAMBICB 0x10 // 0 for Iambic A, 1 for Iambic B
 unsigned char keyerControl = IAMBICB;
@@ -191,7 +191,6 @@ boolean txCAT = false;         // turned on if the transmitting due to a CAT com
                                // frequency when it crosses the frequency border of 10 MHz
 uint32_t dbgCount = 0;         // not used now
 unsigned char txFilter = 0;    // which of the four transmit filters are in use
-boolean modeCalibrate = false; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
                                // beat frequency
 
 /**
@@ -679,6 +678,8 @@ void setup()
   settings.inTx = false;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
   settings.keyDown = false; // in cw mode, denotes the carrier is being transmitted
   settings.isUSB = false;   // upper sideband was selected, this is reset to the default for the
+
+  settings.cwDelayTime = 60;
 
   Serial.begin(38400);
   Serial.flush();

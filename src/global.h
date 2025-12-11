@@ -42,9 +42,6 @@ int enc_read(void);
 // ============================================================================
 // ubitx_si5351.ino
 // ============================================================================
-void i2cWrite(uint8_t reg, uint8_t val);
-void i2cWriten(uint8_t reg, uint8_t *vals, uint8_t vcnt);
-void si5351bx_init();
 void si5351bx_setfreq(uint8_t clknum, uint32_t fout);
 void si5351_set_calibration(int32_t cal);
 void initOscillators();
@@ -57,15 +54,9 @@ void calibrateClock();
 void menuRitToggle(int btn);
 void menuVfoToggle(int btn);
 void menuSidebandToggle(int btn);
-void menuSplitToggle(int btn);
 void menuExit(int btn);
 int menuSetup(int btn);
-void printCarrierFreq(uint32_t freq);
 void menuSetupCarrier(int btn);
-void menuSetupCwTone(int btn);
-void menuSetupCwDelay(int btn);
-void menuSetupKeyer(int btn);
-void menuReadADC(int btn);
 void doMenu();
 
 // ============================================================================
@@ -104,6 +95,7 @@ typedef struct
     int cwSpeed;
     bool splitOn;           // working split, uses VFO B as the transmit frequency, (NOT IMPLEMENTED YET)
     uint32_t cwTimeout = 0; // milliseconds to go before the cw transmit line is released and the radio goes back to rx mode
+    uint8_t cwDelayTime;
 
     bool inTx = false;    // it is set to 1 if in transmit mode (whatever the reason : cw, ptt or cat)
     bool keyDown = false; // in cw mode, denotes the carrier is being transmitted
@@ -112,5 +104,8 @@ typedef struct
 } settings_t;
 
 extern settings_t settings;
+extern char cBuf[30];
+extern char bBuf[30];
+extern char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 
 #endif // GLOBAL_H
