@@ -391,11 +391,11 @@ void processCATCommand2(uint8_t *cmd)
 
   default:
     // somehow, get this to print the four uint8_ts
-    ultoa(*((uint32_t *)cmd), c, 16);
-    itoa(cmd[4], b, 16);
-    strcat(b, ">");
-    strcat(b, c);
-    printLine2(b);
+    ultoa(*((uint32_t *)cmd), cBuf, 16);
+    itoa(cmd[4], bBuf, 16);
+    strcat(bBuf, ">");
+    strcat(bBuf, cBuf);
+    printLine2(bBuf);
     response[0] = 0x00;
     Serial.write(response[0]);
   }
@@ -451,8 +451,8 @@ void checkCAT()
 
   if (cat[4] != 0xf7 && cat[4] != 0xbb && cat[4] != 0x03)
   {
-    sprintf(b, "%d %02x %02x%02x%02x%02x", catCount, cat[4], cat[0], cat[1], cat[2], cat[3]);
-    printLine2(b);
+    sprintf(bBuf, "%d %02x %02x%02x%02x%02x", catCount, cat[4], cat[0], cat[1], cat[2], cat[3]);
+    printLine2(bBuf);
   }
 
   processCATCommand2(cat);

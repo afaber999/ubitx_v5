@@ -115,57 +115,57 @@ void updateDisplay()
   // tks Jack Purdum W8TEE
   // replaced fsprint commmands by str commands for code size reduction
 
-  memset(c, 0, sizeof(c));
-  memset(b, 0, sizeof(b));
+  memset(cBuf, 0, sizeof(cBuf));
+  memset(bBuf, 0, sizeof(bBuf));
 
-  ultoa(frequency, b, DEC);
+  ultoa(frequency, bBuf, DEC);
 
   if (settings.inTx)
   {
     if (settings.cwTimeout > 0)
-      strcpy(c, "   CW:");
+      strcpy(cBuf, "   CW:");
     else
-      strcpy(c, "   TX:");
+      strcpy(cBuf, "   TX:");
   }
   else
   {
     if (settings.ritOn)
-      strcpy(c, "RIT ");
+      strcpy(cBuf, "RIT ");
     else
     {
       if (settings.isUSB)
-        strcpy(c, "USB ");
+        strcpy(cBuf, "USB ");
       else
-        strcpy(c, "LSB ");
+        strcpy(cBuf, "LSB ");
     }
     if (vfoActive == VFO_A) // VFO A is active
-      strcat(c, "A:");
+      strcat(cBuf, "A:");
     else
-      strcat(c, "B:");
+      strcat(cBuf, "B:");
   }
 
   // one mhz digit if less than 10 M, two digits if more
   if (frequency < 10000000l)
   {
-    c[6] = ' ';
-    c[7] = b[0];
-    strcat(c, ".");
-    strncat(c, &b[1], 3);
-    strcat(c, ".");
-    strncat(c, &b[4], 3);
+    cBuf[6] = ' ';
+    cBuf[7] = bBuf[0];
+    strcat(cBuf, ".");
+    strncat(cBuf, &bBuf[1], 3);
+    strcat(cBuf, ".");
+    strncat(cBuf, &bBuf[4], 3);
   }
   else
   {
-    strncat(c, b, 2);
-    strcat(c, ".");
-    strncat(c, &b[2], 3);
-    strcat(c, ".");
-    strncat(c, &b[5], 3);
+    strncat(cBuf, bBuf, 2);
+    strcat(cBuf, ".");
+    strncat(cBuf, &bBuf[2], 3);
+    strcat(cBuf, ".");
+    strncat(cBuf, &bBuf[5], 3);
   }
 
   if (settings.inTx)
-    strcat(c, " TX");
-  printLine(1, c);
+    strcat(cBuf, " TX");
+  printLine(1, cBuf);
 
   /*
     //now, the second line

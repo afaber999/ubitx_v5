@@ -34,11 +34,11 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
   active_delay(200);
   knob_value = initial;
 
-  strcpy(b, prefix);
-  itoa(knob_value, c, 10);
-  strcat(b, c);
-  strcat(b, postfix);
-  printLine2(b);
+  strcpy(bBuf, prefix);
+  itoa(knob_value, cBuf, 10);
+  strcat(bBuf, cBuf);
+  strcat(bBuf, postfix);
+  printLine2(bBuf);
   active_delay(300);
 
   while (!btnDown() && digitalRead(PTT) == HIGH)
@@ -53,10 +53,10 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
         knob_value += step_size;
 
       printLine2(prefix);
-      itoa(knob_value, c, 10);
-      strcpy(b, c);
-      strcat(b, postfix);
-      printLine1(b);
+      itoa(knob_value, cBuf, 10);
+      strcpy(bBuf, cBuf);
+      strcat(bBuf, postfix);
+      printLine1(bBuf);
     }
     checkCAT();
   }
@@ -288,11 +288,11 @@ static void menuCWSpeed(int btn)
 
   if (!btn)
   {
-    strcpy(b, "CW: ");
-    itoa(wpm, c, 10);
-    strcat(b, c);
-    strcat(b, " WPM     \x7E");
-    printLine2(b);
+    strcpy(bBuf, "CW: ");
+    itoa(wpm, cBuf, 10);
+    strcat(bBuf, cBuf);
+    strcat(bBuf, " WPM     \x7E");
+    printLine2(bBuf);
     return;
   }
 
@@ -416,10 +416,10 @@ void calibrateClock()
   startTx(TX_CW);
   si5351bx_setfreq(2, 10000000l);
 
-  strcpy(b, "#1 10 MHz cal:");
-  ltoa(calibration / 8750, c, 10);
-  strcat(b, c);
-  printLine2(b);
+  strcpy(bBuf, "#1 10 MHz cal:");
+  ltoa(calibration / 8750, cBuf, 10);
+  strcat(bBuf, cBuf);
+  printLine2(bBuf);
 
   while (!btnDown())
   {
@@ -440,10 +440,10 @@ void calibrateClock()
 
     si5351_set_calibration(calibration);
     si5351bx_setfreq(2, 10000000l);
-    strcpy(b, "#1 10 MHz cal:");
-    ltoa(calibration / 8750, c, 10);
-    strcat(b, c);
-    printLine2(b);
+    strcpy(bBuf, "#1 10 MHz cal:");
+    ltoa(calibration / 8750, cBuf, 10);
+    strcat(bBuf, cBuf);
+    printLine2(bBuf);
   }
 
   settings.cwTimeout = 0;
@@ -478,17 +478,17 @@ static void menuSetupCalibration(int btn)
 void printCarrierFreq(uint32_t freq)
 {
 
-  memset(c, 0, sizeof(c));
-  memset(b, 0, sizeof(b));
+  memset(cBuf, 0, sizeof(cBuf));
+  memset(bBuf, 0, sizeof(bBuf));
 
-  ultoa(freq, b, DEC);
+  ultoa(freq, bBuf, DEC);
 
-  strncat(c, b, 2);
-  strcat(c, ".");
-  strncat(c, &b[2], 3);
-  strcat(c, ".");
-  strncat(c, &b[5], 1);
-  printLine2(c);
+  strncat(cBuf, bBuf, 2);
+  strcat(cBuf, ".");
+  strncat(cBuf, &bBuf[2], 3);
+  strcat(cBuf, ".");
+  strncat(cBuf, &bBuf[5], 1);
+  printLine2(cBuf);
 }
 
 void menuSetupCarrier(int btn)
@@ -568,8 +568,8 @@ void menuSetupCwTone(int btn)
       continue; // don't update the frequency or the display
 
     tone(CW_TONE, sideTone);
-    itoa(sideTone, b, 10);
-    printLine2(b);
+    itoa(sideTone, bBuf, 10);
+    printLine2(bBuf);
 
     checkCAT();
     active_delay(20);
@@ -691,8 +691,8 @@ void menuReadADC(int btn)
   while (!btnDown())
   {
     adc = analogRead(ANALOG_KEYER);
-    itoa(adc, b, 10);
-    printLine1(b);
+    itoa(adc, bBuf, 10);
+    printLine1(bBuf);
   }
 
   printLine1("");

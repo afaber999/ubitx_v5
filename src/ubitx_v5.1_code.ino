@@ -100,7 +100,15 @@ static void checkButton();
  */
 
 #include <LiquidCrystal.h>
-LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
+
+const byte PIN_RS = 8;
+const byte PIN_ENABLE = 9;
+const byte PIN_D0 = 10;
+const byte PIN_D1 = 11;
+const byte PIN_D2 = 12;
+const byte PIN_D3 = 13;
+
+LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D0, PIN_D1, PIN_D2, PIN_D3);
 
 /**
  * The Arduino, unlike C/C++ on a regular computer with gigauint8_ts of RAM, has very little memory.
@@ -113,7 +121,7 @@ LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
  * the input and output from the USB port. We must keep a count of the uint8_ts used while reading
  * the serial port as we can easily run out of buffer space. This is done in the serial_in_count variable.
  */
-char c[30], b[30];
+char cBuf[30], bBuf[30];
 char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 int count = 0;         // to generally count ticks, loops, etc
 
