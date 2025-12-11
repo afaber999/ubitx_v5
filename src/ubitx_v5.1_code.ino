@@ -101,13 +101,6 @@ static void checkButton();
 
 #include <LiquidCrystal.h>
 
-const byte PIN_RS = 8;
-const byte PIN_ENABLE = 9;
-const byte PIN_D0 = 10;
-const byte PIN_D1 = 11;
-const byte PIN_D2 = 12;
-const byte PIN_D3 = 13;
-
 LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D0, PIN_D1, PIN_D2, PIN_D3);
 
 /**
@@ -124,23 +117,6 @@ LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D0, PIN_D1, PIN_D2, PIN_D3);
 char cBuf[30], bBuf[30];
 char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 int count = 0;         // to generally count ticks, loops, etc
-
-/**
- *  The second set of 16 pins on the Raduino's bottom connector are have the three clock outputs and the digital lines to control the rig.
- *  This assignment is as follows :
- *    Pin   1   2    3    4    5    6    7    8    9    10   11   12   13   14   15   16
- *         GND +5V CLK0  GND  GND  CLK1 GND  GND  CLK2  GND  D2   D3   D4   D5   D6   D7
- *  These too are flexible with what you may do with them, for the Raduino, we use them to :
- *  - TX_RX line : Switches between Transmit and Receive after sensing the PTT or the morse keyer
- *  - CW_KEY line : turns on the carrier for CW
- */
-
-#define TX_RX (7)
-#define CW_TONE (6)
-#define TX_LPF_A (5)
-#define TX_LPF_B (4)
-#define TX_LPF_C (3)
-#define CW_KEY (2)
 
 /**
  * These are the indices where these user changable settinngs are stored  in the EEPROM
@@ -259,27 +235,27 @@ void setTXFilters(uint32_t freq)
 
   if (freq > 21000000L)
   { // the default filter is with 35 MHz cut-off
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else if (freq >= 14000000L)
   { // thrown the KT1 relay on, the 30 MHz LPF is bypassed and the 14-18 MHz LPF is allowd to go through
-    digitalWrite(TX_LPF_A, 1);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 1);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else if (freq > 7000000L)
   {
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 1);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 1);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else
   {
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 1);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 1);
   }
 }
 
@@ -288,27 +264,27 @@ void setTXFilters_v5(uint32_t freq)
 
   if (freq > 21000000L)
   { // the default filter is with 35 MHz cut-off
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else if (freq >= 14000000L)
   { // thrown the KT1 relay on, the 30 MHz LPF is bypassed and the 14-18 MHz LPF is allowd to go through
-    digitalWrite(TX_LPF_A, 1);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 1);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else if (freq > 7000000L)
   {
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 1);
-    digitalWrite(TX_LPF_C, 0);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 1);
+    digitalWrite(PIN_TX_LPF_C, 0);
   }
   else
   {
-    digitalWrite(TX_LPF_A, 0);
-    digitalWrite(TX_LPF_B, 0);
-    digitalWrite(TX_LPF_C, 1);
+    digitalWrite(PIN_TX_LPF_A, 0);
+    digitalWrite(PIN_TX_LPF_B, 0);
+    digitalWrite(PIN_TX_LPF_C, 1);
   }
 }
 
@@ -363,7 +339,7 @@ void setFrequency(uint32_t f)
 
 void startTx(uint8_t txMode)
 {
-  digitalWrite(TX_RX, 1);
+  digitalWrite(PIN_TX_RX, 1);
   settings.inTx = 1;
 
   if (settings.ritOn)
@@ -413,7 +389,7 @@ void stopTx()
 {
   settings.inTx = 0;
 
-  digitalWrite(TX_RX, 0);          // turn off the tx
+  digitalWrite(PIN_TX_RX, 0);      // turn off the tx
   si5351bx_setfreq(0, usbCarrier); // set back the cardrier oscillator anyway, cw tx switches it off
 
   if (settings.ritOn)
@@ -672,21 +648,21 @@ void initPorts()
   pinMode(PTT, INPUT_PULLUP);
   pinMode(ANALOG_KEYER, INPUT_PULLUP);
 
-  pinMode(CW_TONE, OUTPUT);
-  digitalWrite(CW_TONE, 0);
+  pinMode(PIN_CW_TONE, OUTPUT);
+  digitalWrite(PIN_CW_TONE, 0);
 
-  pinMode(TX_RX, OUTPUT);
-  digitalWrite(TX_RX, 0);
+  pinMode(PIN_TX_RX, OUTPUT);
+  digitalWrite(PIN_TX_RX, 0);
 
-  pinMode(TX_LPF_A, OUTPUT);
-  pinMode(TX_LPF_B, OUTPUT);
-  pinMode(TX_LPF_C, OUTPUT);
-  digitalWrite(TX_LPF_A, 0);
-  digitalWrite(TX_LPF_B, 0);
-  digitalWrite(TX_LPF_C, 0);
+  pinMode(PIN_TX_LPF_A, OUTPUT);
+  pinMode(PIN_TX_LPF_B, OUTPUT);
+  pinMode(PIN_TX_LPF_C, OUTPUT);
+  digitalWrite(PIN_TX_LPF_A, 0);
+  digitalWrite(PIN_TX_LPF_B, 0);
+  digitalWrite(PIN_TX_LPF_C, 0);
 
-  pinMode(CW_KEY, OUTPUT);
-  digitalWrite(CW_KEY, 0);
+  pinMode(PIN_CW_KEY, OUTPUT);
+  digitalWrite(PIN_CW_KEY, 0);
 }
 
 void setup()

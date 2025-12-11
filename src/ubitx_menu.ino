@@ -403,9 +403,9 @@ void calibrateClock()
     active_delay(100);
   active_delay(100);
 
-  digitalWrite(TX_LPF_A, 0);
-  digitalWrite(TX_LPF_B, 0);
-  digitalWrite(TX_LPF_C, 0);
+  digitalWrite(PIN_TX_LPF_A, 0);
+  digitalWrite(PIN_TX_LPF_B, 0);
+  digitalWrite(PIN_TX_LPF_C, 0);
 
   calibration = 0;
 
@@ -553,7 +553,7 @@ void menuSetupCwTone(int btn)
   printLine1("Tune CW tone");
   printLine2("PTT to confirm. ");
   active_delay(1000);
-  tone(CW_TONE, sideTone);
+  tone(PIN_CW_TONE, sideTone);
 
   // disable all clock 1 and clock 2
   while (digitalRead(PTT) == HIGH && !btnDown())
@@ -567,14 +567,14 @@ void menuSetupCwTone(int btn)
     else
       continue; // don't update the frequency or the display
 
-    tone(CW_TONE, sideTone);
+    tone(PIN_CW_TONE, sideTone);
     itoa(sideTone, bBuf, 10);
     printLine2(bBuf);
 
     checkCAT();
     active_delay(20);
   }
-  noTone(CW_TONE);
+  noTone(PIN_CW_TONE);
   // save the setting
   if (digitalRead(PTT) == LOW)
   {

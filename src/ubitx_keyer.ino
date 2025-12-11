@@ -76,9 +76,9 @@ uint8_t getPaddle()
  */
 void cwKeydown()
 {
-  settings.keyDown = 1; // tracks the CW_KEY
-  tone(CW_TONE, (int)sideTone);
-  digitalWrite(CW_KEY, 1);
+  settings.keyDown = 1; // tracks the PIN_CW_KEY
+  tone(PIN_CW_TONE, (int)sideTone);
+  digitalWrite(PIN_CW_KEY, 1);
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
   // settings.cwTimeout = millis() + CW_TIMEOUT;
@@ -91,9 +91,9 @@ void cwKeydown()
  */
 void cwKeyUp()
 {
-  settings.keyDown = 0; // tracks the CW_KEY
-  noTone(CW_TONE);
-  digitalWrite(CW_KEY, 0);
+  settings.keyDown = 0; // tracks the PIN_CW_KEY
+  noTone(PIN_CW_TONE);
+  digitalWrite(PIN_CW_KEY, 0);
 
   // Modified by KD8CEC, for CW Delay Time save to eeprom
   // settings.cwTimeout = millis() + CW_TIMEOUT;

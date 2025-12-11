@@ -2,6 +2,7 @@
 #define GLOBAL_H
 
 #include <Arduino.h>
+#include "config.h"
 // ============================================================================
 // Function Prototypes - uBITX v5
 // Extracted from all .ino source files
