@@ -49,12 +49,12 @@ uint8_t delayBeforeCWStartTime = 50;
 // we store the last padde's character
 // to alternatively send dots and dashes
 // when both are simultaneously pressed
-char lastPaddle = 0;
+static char lastPaddle = 0;
 
 // reads the analog keyer pin and reports the paddle
 uint8_t getPaddle()
 {
-  int paddle = analogRead(ANALOG_KEYER);
+  int paddle = analogRead(PIN_ANALOG_KEYER);
 
   if (paddle > 800) // above 4v is up
     return 0;
@@ -124,7 +124,7 @@ char update_PaddleLatch(uint8_t isUpdateKeyState)
 {
   unsigned char tmpKeyerControl = 0;
 
-  int paddle = analogRead(ANALOG_KEYER);
+  int paddle = analogRead(PIN_ANALOG_KEYER);
   // diagnostic, VU2ESE
   // itoa(paddle, b, 10);
   // printLine2(b);

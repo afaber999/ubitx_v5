@@ -14,7 +14,6 @@
 // ============================================================================
 void active_delay(uint32_t delay_by);
 void setTXFilters(uint32_t freq);
-void setTXFilters_v5(uint32_t freq);
 void setFrequency(uint32_t f);
 void startTx(uint8_t txMode);
 void stopTx();
@@ -142,6 +141,8 @@ typedef struct
     uint32_t frequency;
     uint32_t sideTone;
     char vfoActive;
+
+    int8_t meter_reading;
 
 } settings_t;
 

@@ -51,7 +51,7 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
   printLine2(bBuf);
   active_delay(300);
 
-  while (!btnDown() && digitalRead(PTT) == HIGH)
+  while (!btnDown() && digitalRead(PIN_PTT) == HIGH)
   {
 
     knob = enc_read();
@@ -409,8 +409,9 @@ void calibrateClock()
   int knob = 0;
 
   // keep clear of any previous button press
-  while (btnDown())
+  while (btnDown()) {
     active_delay(100);
+  }
   active_delay(100);
 
   digitalWrite(PIN_TX_LPF_A, 0);
@@ -434,9 +435,9 @@ void calibrateClock()
   while (!btnDown())
   {
 
-    if (digitalRead(PTT) == LOW && !settings.keyDown)
+    if (digitalRead(PIN_PTT) == LOW && !settings.keyDown)
       cwKeydown();
-    if (digitalRead(PTT) == HIGH && settings.keyDown)
+    if (digitalRead(PIN_PTT) == HIGH && settings.keyDown)
       cwKeyUp();
 
     knob = enc_read();
@@ -466,8 +467,9 @@ void calibrateClock()
   setFrequency(settings.frequency);
   updateDisplay();
 
-  while (btnDown())
+  while (btnDown()) {
     active_delay(50);
+  }
   active_delay(100);
 }
 
@@ -566,7 +568,7 @@ static void menuSetupCwTone(int btn)
   tone(PIN_CW_TONE, settings.sideTone);
 
   // disable all clock 1 and clock 2
-  while (digitalRead(PTT) == HIGH && !btnDown())
+  while (digitalRead(PIN_PTT) == HIGH && !btnDown())
   {
     knob = enc_read();
 
@@ -586,7 +588,7 @@ static void menuSetupCwTone(int btn)
   }
   noTone(PIN_CW_TONE);
   // save the setting
-  if (digitalRead(PTT) == LOW)
+  if (digitalRead(PIN_PTT) == LOW)
   {
     printLine2("settings.Sidetone set!    ");
     EEPROM.put(CW_SIDETONE, settings.sideTone);
@@ -700,7 +702,7 @@ static void menuReadADC(int btn)
 
   while (!btnDown())
   {
-    adc = analogRead(ANALOG_KEYER);
+    adc = analogRead(PIN_ANALOG_KEYER);
     itoa(adc, bBuf, 10);
     printLine1(bBuf);
   }

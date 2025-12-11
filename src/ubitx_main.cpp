@@ -1,34 +1,6 @@
 /**
  * This source file is under General Public License version 3.
  *
- * This verision uses a built-in Si5351 library
- * Most source code are meant to be understood by the compilers and the computers.
- * Code that has to be hackable needs to be well understood and properly documented.
- * Donald Knuth coined the term Literate Programming to indicate code that is written be
- * easily read and understood.
- *
- * The Raduino is a small board that includes the Arduin Nano, a 16x2 LCD display and
- * an Si5351a frequency synthesizer. This board is manufactured by Paradigm Ecomm Pvt Ltd
- *
- * To learn more about Arduino you may visit www.arduino.cc.
- *
- * The Arduino works by starts executing the code in a function called setup() and then it
- * repeatedly keeps calling loop() forever. All the initialization code is kept in setup()
- * and code to continuously sense the tuning knob, the function button, transmit/receive,
- * etc is all in the loop() function. If you wish to study the code top down, then scroll
- * to the bottom of this file and read your way up.
- *
- * Below are the libraries to be included for building the Raduino
- * The EEPROM library is used to store settings like the frequency memory, caliberation data,
- * callsign etc .
- *
- *  The main chip which generates upto three oscillators of various frequencies in the
- *  Raduino is the Si5351a. To learn more about Si5351a you can download the datasheet
- *  from www.silabs.com although, strictly speaking it is not a requirment to understand this code.
- *  Instead, you can look up the Si5351 library written by xxx, yyy. You can download and
- *  install it from www.url.com to complile this file.
- *  The Wire.h library is used to talk to the Si5351 and we also declare an instance of
- *  Si5351 object to control the clocks.
  */
 
 #include "global.h"
@@ -37,59 +9,15 @@
 
 settings_t settings;
 
-/**
-    The main chip which generates upto three oscillators of various frequencies in the
-    Raduino is the Si5351a. To learn more about Si5351a you can download the datasheet
-    from www.silabs.com although, strictly speaking it is not a requirment to understand this code.
-
-    We no longer use the standard SI5351 library because of its huge overhead due to many unused
-    features consuming a lot of program space. Instead of depending on an external library we now use
-    Jerry Gaffke's, KE7ER, lightweight standalone mimimalist "si5351bx" routines (see further down the
-    code). Here are some defines and declarations used by Jerry's routines:
-*/
-
 // function prototypes for functions used only in this file
 static void checkButton();
 
-/**
- * The Arduino, unlike C/C++ on a regular computer with gigauint8_ts of RAM, has very little memory.
- * We have to be very careful with variables that are declared inside the functions as they are
- * created in a memory region called the stack. The stack has just a few uint8_ts of space on the Arduino
- * if you declare large strings inside functions, they can easily exceed the capacity of the stack
- * and mess up your programs.
- * We circumvent this by declaring a few global buffers as  kitchen counters where we can
- * slice and dice our strings. These strings are mostly used to control the display or handle
- * the input and output from the USB port. We must keep a count of the uint8_ts used while reading
- * the serial port as we can easily run out of buffer space. This is done in the serial_in_count variable.
- */
+// temp buffer to build strings for the display
 char cBuf[30];
 char bBuf[30];
 char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 int count = 0;         // to generally count ticks, loops, etc
 
-/**
- * The uBITX is an upconnversion transceiver. The first IF is at 45 MHz.
- * The first IF frequency is not exactly at 45 Mhz but about 5 khz lower,
- * this shift is due to the loading on the 45 Mhz crystal filter by the matching
- * L-network used on it's either sides.
- * The first oscillator works between 48 Mhz and 75 MHz. The signal is subtracted
- * from the first oscillator to arriive at 45 Mhz IF. Thus, it is inverted : LSB becomes USB
- * and USB becomes LSB.
- * The second IF of 12 Mhz has a ladder crystal filter. If a second oscillator is used at
- * 57 Mhz, the signal is subtracted FROM the oscillator, inverting a second time, and arrives
- * at the 12 Mhz ladder filter thus doouble inversion, keeps the sidebands as they originally were.
- * If the second oscillator is at 33 Mhz, the oscilaltor is subtracated from the signal,
- * thus keeping the signal's sidebands inverted. The USB will become LSB.
- * We use this technique to switch sidebands. This is to avoid placing the lsbCarrier close to
- * 12 MHz where its fifth harmonic beats with the arduino's 16 Mhz oscillator's fourth harmonic
- */
-
-#define INIT_USB_FREQ (11059200l)
-// limits the tuning and working range of the ubitx between 3 MHz and 30 MHz
-#define LOWEST_FREQ (100000l)
-#define HIGHEST_FREQ (30000000l)
-
-int8_t meter_reading = 0; // a -1 on meter makes it invisible
 uint32_t usbCarrier;
 char isUsbVfoA = 0;
 char isUsbVfoB = 1;
@@ -144,51 +72,22 @@ void active_delay(uint32_t delay_by)
  * See the circuit to understand this
  */
 
-void setTXFilters(uint32_t freq)
+void setTXFilters(uint32_t frequency)
 {
 
-  if (freq > 21000000L)
+  if (frequency > 21000000L)
   { // the default filter is with 35 MHz cut-off
     digitalWrite(PIN_TX_LPF_A, 0);
     digitalWrite(PIN_TX_LPF_B, 0);
     digitalWrite(PIN_TX_LPF_C, 0);
   }
-  else if (freq >= 14000000L)
+  else if (frequency >= 14000000L)
   { // thrown the KT1 relay on, the 30 MHz LPF is bypassed and the 14-18 MHz LPF is allowd to go through
     digitalWrite(PIN_TX_LPF_A, 1);
     digitalWrite(PIN_TX_LPF_B, 0);
     digitalWrite(PIN_TX_LPF_C, 0);
   }
-  else if (freq > 7000000L)
-  {
-    digitalWrite(PIN_TX_LPF_A, 0);
-    digitalWrite(PIN_TX_LPF_B, 1);
-    digitalWrite(PIN_TX_LPF_C, 0);
-  }
-  else
-  {
-    digitalWrite(PIN_TX_LPF_A, 0);
-    digitalWrite(PIN_TX_LPF_B, 0);
-    digitalWrite(PIN_TX_LPF_C, 1);
-  }
-}
-
-void setTXFilters_v5(uint32_t freq)
-{
-
-  if (freq > 21000000L)
-  { // the default filter is with 35 MHz cut-off
-    digitalWrite(PIN_TX_LPF_A, 0);
-    digitalWrite(PIN_TX_LPF_B, 0);
-    digitalWrite(PIN_TX_LPF_C, 0);
-  }
-  else if (freq >= 14000000L)
-  { // thrown the KT1 relay on, the 30 MHz LPF is bypassed and the 14-18 MHz LPF is allowd to go through
-    digitalWrite(PIN_TX_LPF_A, 1);
-    digitalWrite(PIN_TX_LPF_B, 0);
-    digitalWrite(PIN_TX_LPF_C, 0);
-  }
-  else if (freq > 7000000L)
+  else if (frequency > 7000000L)
   {
     digitalWrite(PIN_TX_LPF_A, 0);
     digitalWrite(PIN_TX_LPF_B, 1);
@@ -301,13 +200,14 @@ void startTx(uint8_t txMode)
 
 void stopTx()
 {
-  settings.inTx = 0;
+  settings.inTx = false;
 
-  digitalWrite(PIN_TX_RX, 0);      // turn off the tx
+  digitalWrite(PIN_TX_RX, LOW);    // turn off the tx
   si5351bx_setfreq(0, usbCarrier); // set back the cardrier oscillator anyway, cw tx switches it off
 
-  if (settings.ritOn)
+  if (settings.ritOn) {
     setFrequency(ritRxFrequency);
+  }
   else
   {
     if (settings.splitOn)
@@ -370,13 +270,13 @@ void checkPTT()
   if (settings.cwTimeout > 0)
     return;
 
-  if (digitalRead(PTT) == 0 && settings.inTx == 0)
+  if ( (digitalRead(PIN_PTT) == LOW) && !settings.inTx)
   {
     startTx(TX_SSB);
     active_delay(50); // debounce the PTT
   }
 
-  if (digitalRead(PTT) == 1 && settings.inTx == 1)
+  if ((digitalRead(PIN_PTT) == HIGH) && settings.inTx)
     stopTx();
 }
 
@@ -405,13 +305,11 @@ static void checkButton()
 
 void doTuning()
 {
-  int s;
-  uint32_t prev_freq;
-
-  s = enc_read();
+  int s = enc_read();
+  
   if (s != 0)
   {
-    prev_freq = settings.frequency;
+    uint32_t prev_freq = settings.frequency;
 
     if (s > 4)
       settings.frequency += 10000l;
@@ -426,9 +324,11 @@ void doTuning()
     else
       settings.frequency -= 10000l;
 
+    // check if we have crossed the 10 MHz border
     if (prev_freq < 10000000l && settings.frequency > 10000000l)
       settings.isUSB = true;
 
+    // check if we have crossed the 10 MHz border
     if (prev_freq > 10000000l && settings.frequency < 10000000l)
       settings.isUSB = false;
 
@@ -551,16 +451,16 @@ void initPorts()
   analogReference(DEFAULT);
 
   //??
-  pinMode(ENC_A, INPUT_PULLUP);
-  pinMode(ENC_B, INPUT_PULLUP);
-  pinMode(FBUTTON, INPUT_PULLUP);
+  pinMode(PIN_ENC_A, INPUT_PULLUP);
+  pinMode(PIN_ENC_B, INPUT_PULLUP);
+  pinMode(PIN_FBUTTON, INPUT_PULLUP);
 
   // configure the function button to use the external pull-up
   //  pinMode(FBUTTON, INPUT);
   //  digitalWrite(FBUTTON, HIGH);
 
-  pinMode(PTT, INPUT_PULLUP);
-  pinMode(ANALOG_KEYER, INPUT_PULLUP);
+  pinMode(PIN_PTT, INPUT_PULLUP);
+  pinMode(PIN_ANALOG_KEYER, INPUT_PULLUP);
 
   pinMode(PIN_CW_TONE, OUTPUT);
   digitalWrite(PIN_CW_TONE, 0);
@@ -581,7 +481,6 @@ void initPorts()
 
 void setup()
 {
-
   settings.vfoA = 7150000L;
   settings.vfoB = 14200000L;
   settings.ritOn = false;
@@ -599,6 +498,7 @@ void setup()
   settings.txCAT = false;
   settings.sideTone = 800;
   settings.vfoActive = VFO_A;
+  settings.meter_reading = 0;
 
   Serial.begin(38400);
   Serial.flush();
@@ -607,7 +507,7 @@ void setup()
 
   // we print this line so this shows up even if the raduino
   // crashes later in the code
-  printLine2("uBITX v5.1");
+  printLine2("uBITX v5.11");
   // active_delay(500);
 
   //  initMeter(); //not used in this build
@@ -620,7 +520,9 @@ void setup()
   updateDisplay();
 
   if (btnDown())
+  {
     factory_alignment();
+  }
 }
 
 /**

@@ -34,7 +34,7 @@ void initDisplay()
 // returns true if the button is pressed
 int btnDown()
 {
-  if (digitalRead(FBUTTON) == HIGH)
+  if (digitalRead(PIN_FBUTTON) == HIGH)
     return 0;
   else
     return 1;
@@ -201,7 +201,7 @@ void updateDisplay()
       strcpy(c, "RIT");
 
     strcpy(c, "      \xff");
-    drawMeter(meter_reading);
+    drawMeter(settings.meter_reading);
     strcat(c, meter);
     strcat(c, "\xff");
     printLine2(c);*/
@@ -229,7 +229,7 @@ int enc_prev_state = 3;
 
 uint8_t enc_state(void)
 {
-  return (analogRead(ENC_A) > 500 ? 1 : 0) + (analogRead(ENC_B) > 500 ? 2 : 0);
+  return (analogRead(PIN_ENC_A) > 500 ? 1 : 0) + (analogRead(PIN_ENC_B) > 500 ? 2 : 0);
 }
 
 int enc_read(void)

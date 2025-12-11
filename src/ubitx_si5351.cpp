@@ -71,7 +71,8 @@ static void i2cWriten(uint8_t reg, uint8_t *vals, uint8_t vcnt)
 }
 
 static void si5351bx_init()
-{ // Call once at power-up, start PLLA
+{ 
+  // Call once at power-up, start PLLA
   uint32_t msxp1;
   Wire.begin();
   i2cWrite(149, 0);                    // SpreadSpectrum off
