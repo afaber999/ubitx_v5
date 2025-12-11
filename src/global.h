@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "config.h"
+
 // ============================================================================
 // Function Prototypes - uBITX v5
 // Extracted from all .ino source files
@@ -29,6 +30,7 @@ void loop();
 // ============================================================================
 // ubitx_ui.ino
 // ============================================================================
+void initDisplay();
 int btnDown();
 void initMeter();
 void drawMeter(int8_t needle);
@@ -91,6 +93,7 @@ void checkCAT();
 // these are the parameter passed to startTx
 #define TX_SSB 0
 #define TX_CW 1
+#define IAMBICB 0x10 // 0 for Iambic A, 1 for Iambic B
 
 /***********************************************************************************************************************
  * These are the indices where these user changable settinngs are stored  in the EEPROM
@@ -121,7 +124,6 @@ void checkCAT();
  * EEPROM END
  */
 
-
 typedef struct
 {
     uint32_t vfoA;
@@ -148,5 +150,11 @@ extern char cBuf[30];
 extern char bBuf[30];
 extern char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 extern uint32_t usbCarrier;
+extern int32_t calibration;
+extern uint8_t keyerControl;
+extern bool Iambic_Key;
+
+extern char isUsbVfoA;
+extern char isUsbVfoB;
 
 #endif // GLOBAL_H

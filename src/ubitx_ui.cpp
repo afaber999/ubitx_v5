@@ -7,6 +7,29 @@
  */
 
 #include "global.h"
+#include <LiquidCrystal.h>
+
+/**
+ * The Raduino board is the size of a standard 16x2 LCD panel. It has three connectors:
+ *
+ * First, is an 8 pin connector that provides +5v, GND and six analog input pins that can also be
+ * configured to be used as digital input or output pins. These are referred to as A0,A1,A2,
+ * A3,A6 and A7 pins. The A4 and A5 pins are missing from this connector as they are used to
+ * talk to the Si5351 over I2C protocol.
+ *
+ * Second is a 16 pin LCD connector. This connector is meant specifically for the standard 16x2
+ * LCD display in 4 bit mode. The 4 bit mode requires 4 data lines and two control lines to work:
+ * Lines used are : RESET, ENABLE, D4, D5, D6, D7
+ * We include the library and declare the configuration of the LCD panel too
+ */
+
+static LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D0, PIN_D1, PIN_D2, PIN_D3);
+
+void initDisplay()
+{
+  lcd.begin(16, 2); // initialize the lcd for 16 chars 2 lines
+  lcd.clear();
+}
 
 // returns true if the button is pressed
 int btnDown()

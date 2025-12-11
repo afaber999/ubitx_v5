@@ -15,6 +15,7 @@
  */
 
 #include "global.h"
+#include <EEPROM.h>
 
 static uint8_t menuOn = 0;         // set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
 static bool modeCalibrate = false; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
