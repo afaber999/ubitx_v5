@@ -30,34 +30,34 @@ void loop();
 // ubitx_ui.ino
 // ============================================================================
 void initDisplay();
-int btnDown();
+bool btnDown();
 void initMeter();
 void drawMeter(int8_t needle);
 void printLine(int linenmbr, const char *c);
 void printLine1(const char *c);
 void printLine2(const char *c);
 void updateDisplay();
-uint8_t enc_state(void);
 int enc_read(void);
+
+bool readEncPtt();
+bool readEncA();
+bool readEncB();
 
 // ============================================================================
 // ubitx_si5351.ino
 // ============================================================================
 void si5351bx_setfreq(uint8_t clknum, uint32_t fout);
 void si5351_set_calibration(int32_t cal);
-void initOscillators();
+void initOscillators(uint32_t calibration);
 
 // ============================================================================
 // ubitx_menu.ino
 // ============================================================================
 void calibrateClock();
 
-void menuRitToggle(int btn);
-void menuVfoToggle(int btn);
-void menuSidebandToggle(int btn);
-void menuExit(int btn);
-int menuSetup(int btn);
-void menuSetupCarrier(int btn);
+void menuVfoToggle(bool btn);
+int menuSetup(bool btn);
+void menuSetupCarrier(bool btn);
 void doMenu();
 
 // ============================================================================
@@ -125,6 +125,7 @@ void checkCAT();
 
 typedef struct
 {
+    uint32_t pllCalibration;
     uint32_t vfoA;
     uint32_t vfoB;
     bool ritOn;
@@ -151,11 +152,13 @@ extern char cBuf[30];
 extern char bBuf[30];
 extern char printBuff[2][31]; // mirrors what is showing on the two lines of the display
 extern uint32_t usbCarrier;
-extern int32_t calibration;
 extern uint8_t keyerControl;
 extern bool Iambic_Key;
 
 extern char isUsbVfoA;
 extern char isUsbVfoB;
+
+void HandleSimIo();
+bool pttOn();
 
 #endif // GLOBAL_H

@@ -30,7 +30,6 @@
 #include <global.h>
 #include <Wire.h>
 
-
 static void i2cWrite(uint8_t reg, uint8_t val);
 static void i2cWriten(uint8_t reg, uint8_t *vals, uint8_t vcnt);
 static void si5351bx_init();
@@ -48,10 +47,9 @@ static void si5351bx_init();
 
 // User program may have reason to poke new values into these 3 RAM variables
 uint32_t si5351bx_vcoa = (SI5351BX_XTAL * SI5351BX_MSA); // 25mhzXtal calibrate
-uint8_t si5351bx_rdiv = 0;                               // 0-7, CLK pin sees fout/(2**rdiv)
-uint8_t si5351bx_drive[3] = {3, 3, 3};                   // 0=2ma 1=4ma 2=6ma 3=8ma for CLK 0,1,2
+static const uint8_t si5351bx_rdiv = 0;                  // 0-7, CLK pin sees fout/(2**rdiv)
+static const uint8_t si5351bx_drive[3] = {3, 3, 3};      // 0=2ma 1=4ma 2=6ma 3=8ma for CLK 0,1,2
 uint8_t si5351bx_clken = 0xFF;                           // Private, all CLK output drivers off
-int32_t calibration = 0;
 
 static void i2cWrite(uint8_t reg, uint8_t val)
 { // write reg via i2c
@@ -71,7 +69,7 @@ static void i2cWriten(uint8_t reg, uint8_t *vals, uint8_t vcnt)
 }
 
 static void si5351bx_init()
-{ 
+{
   // Call once at power-up, start PLLA
   uint32_t msxp1;
   Wire.begin();
@@ -127,10 +125,9 @@ void si5351_set_calibration(int32_t cal)
   si5351bx_setfreq(0, usbCarrier);
 }
 
-void initOscillators()
+void initOscillators(uint32_t calibration)
 {
   // initialize the SI5351
   si5351bx_init();
-  si5351bx_vcoa = (SI5351BX_XTAL * SI5351BX_MSA) + calibration; // apply the calibration correction factor
-  si5351bx_setfreq(0, usbCarrier);
+  si5351_set_calibration(calibration);
 }

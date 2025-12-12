@@ -118,17 +118,6 @@ void setFrequency(uint32_t f)
 {
   setTXFilters(f);
 
-  /*
-    if (isUSB){
-      si5351bx_setfreq(2, firstIF  + f);
-      si5351bx_setfreq(1, firstIF + usbCarrier);
-    }
-    else{
-      si5351bx_setfreq(2, firstIF + f);
-      si5351bx_setfreq(1, firstIF - usbCarrier);
-    }
-  */
-  // alternative to reduce the intermod spur
   if (settings.isUSB)
   {
     si5351bx_setfreq(2, firstIF + f);
@@ -139,7 +128,6 @@ void setFrequency(uint32_t f)
     si5351bx_setfreq(2, firstIF + f);
     si5351bx_setfreq(1, firstIF - usbCarrier);
   }
-
   settings.frequency = f;
 }
 
@@ -153,7 +141,7 @@ void setFrequency(uint32_t f)
 void startTx(uint8_t txMode)
 {
   digitalWrite(PIN_TX_RX, 1);
-  settings.inTx = 1;
+  settings.inTx = true;
 
   if (settings.ritOn)
   {
@@ -187,13 +175,12 @@ void startTx(uint8_t txMode)
     si5351bx_setfreq(0, 0);
     si5351bx_setfreq(1, 0);
 
-    // shif the first oscillator to the tx frequency directly
-    // the key up and key down will toggle the carrier unbalancing
+    // shift the first oscillator to the tx frequency directly
+    // the key up and key down (CW_KEY) will toggle the carrier unbalancing
     // the exact cw frequency is the tuned frequency + sidetone
-    if (settings.isUSB)
-      si5351bx_setfreq(2, settings.frequency + settings.sideTone);
-    else
-      si5351bx_setfreq(2, settings.frequency - settings.sideTone);
+
+    uint32_t cwFreq = (settings.isUSB) ? (settings.frequency + settings.sideTone) : (settings.frequency - settings.sideTone);
+    si5351bx_setfreq(2, cwFreq);
   }
   updateDisplay();
 }
@@ -201,15 +188,16 @@ void startTx(uint8_t txMode)
 void stopTx()
 {
   settings.inTx = false;
-
-  digitalWrite(PIN_TX_RX, LOW);    // turn off the tx
+  digitalWrite(PIN_TX_RX, LOW);    // turn off the tx circuit
   si5351bx_setfreq(0, usbCarrier); // set back the cardrier oscillator anyway, cw tx switches it off
 
-  if (settings.ritOn) {
+  if (settings.ritOn)
+  {
     setFrequency(ritRxFrequency);
   }
   else
   {
+    // toggle VFO if split is on
     if (settings.splitOn)
     {
       // vfo Change
@@ -226,6 +214,8 @@ void stopTx()
         settings.isUSB = isUsbVfoB;
       }
     }
+
+    // restore the normal frequency
     setFrequency(settings.frequency);
   }
   updateDisplay();
@@ -237,7 +227,7 @@ void stopTx()
  */
 void ritEnable(uint32_t f)
 {
-  settings.ritOn = 1;
+  settings.ritOn = true;
   // save the non-rit frequency back into the VFO memory
   // as RIT is a temporary shift, this is not saved to EEPROM
   ritTxFrequency = f;
@@ -248,7 +238,7 @@ void ritDisable()
 {
   if (settings.ritOn)
   {
-    settings.ritOn = 0;
+    settings.ritOn = false;
     setFrequency(ritTxFrequency);
     updateDisplay();
   }
@@ -270,13 +260,13 @@ void checkPTT()
   if (settings.cwTimeout > 0)
     return;
 
-  if ( (digitalRead(PIN_PTT) == LOW) && !settings.inTx)
+  if (pttOn() && !settings.inTx)
   {
     startTx(TX_SSB);
     active_delay(50); // debounce the PTT
   }
 
-  if ((digitalRead(PIN_PTT) == HIGH) && settings.inTx)
+  if (!pttOn() && settings.inTx)
     stopTx();
 }
 
@@ -306,7 +296,7 @@ static void checkButton()
 void doTuning()
 {
   int s = enc_read();
-  
+
   if (s != 0)
   {
     uint32_t prev_freq = settings.frequency;
@@ -367,7 +357,7 @@ void initSettings()
   uint8_t x;
   // read the settings from the eeprom and restore them
   // if the readings are off, then set defaults
-  EEPROM.get(MASTER_CAL, calibration);
+  EEPROM.get(MASTER_CAL, settings.pllCalibration);
   EEPROM.get(USB_CAL, usbCarrier);
   EEPROM.get(VFO_A, settings.vfoA);
   EEPROM.get(VFO_B, settings.vfoB);
@@ -513,7 +503,7 @@ void setup()
   //  initMeter(); //not used in this build
   initSettings();
   initPorts();
-  initOscillators();
+  initOscillators(settings.pllCalibration);
 
   settings.frequency = settings.vfoA;
   setFrequency(settings.vfoA);
@@ -533,20 +523,30 @@ uint8_t flasher = 0;
 void loop()
 {
 
-  cwKeyer();
+  // AF DISABLE FOR NOW IN SIM MODE
+  // cwKeyer();
+
   if (!settings.txCAT)
+  {
     checkPTT();
+  }
+
   checkButton();
 
   // tune only when not tranmsitting
   if (!settings.inTx)
   {
     if (settings.ritOn)
+    {
       doRIT();
+    }
     else
+    {
       doTuning();
+    }
   }
 
   // we check CAT after the encoder as it might put the radio into TX
-  checkCAT();
+  // checkCAT();
+  HandleSimIo();
 }

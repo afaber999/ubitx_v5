@@ -29,7 +29,7 @@ void factory_alignment()
 
   calibrateClock();
 
-  if (calibration == 0)
+  if (settings.pllCalibration == 0)
   {
     printLine2("Setup Aborted");
     return;
@@ -42,7 +42,7 @@ void factory_alignment()
   active_delay(1000);
 
   usbCarrier = 11053000l;
-  menuSetupCarrier(1);
+  menuSetupCarrier(true);
 
   if (usbCarrier == 11994999l)
   {

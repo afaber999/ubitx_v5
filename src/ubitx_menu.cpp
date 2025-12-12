@@ -17,19 +17,31 @@
 #include "global.h"
 #include <EEPROM.h>
 
-static uint8_t menuOn = 0;         // set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
-static bool modeCalibrate = false; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
+static uint8_t menuOn = 0;        // set to 1 when the menu is being displayed, if a menu item sets it to zero, the menu is exited
+static bool modeCalibrate = true; // this mode of menus shows extended menus to calibrate the oscillators and choose the proper
 
-static void menuSetupCalibration(int btn);
-static void menuBand(int btn);
+static void menuSetupCalibration(bool btn);
+static void menuBand(bool btn);
 static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix);
-static void menuCWSpeed(int btn);
-static void menuReadADC(int btn);
-static void menuSetupKeyer(int btn);
-static void menuSetupCwDelay(int btn);
-static void menuSetupCwTone(int btn);
+static void menuCWSpeed(bool btn);
+static void menuReadADC(bool btn);
+static void menuSetupKeyer(bool btn);
+static void menuSetupCwDelay(bool btn);
+static void menuSetupCwTone(bool btn);
 static void printCarrierFreq(uint32_t freq);
-static void menuSplitToggle(int btn);
+static void menuSplitToggle(bool btn);
+static void menuRitToggle(bool btn);
+static void menuExit(bool btn);
+static void menuSidebandToggle(bool btn);
+
+void waitForBtnUp()
+{
+  while (btnDown())
+  {
+    active_delay(50);
+  }
+  active_delay(50);
+}
 
 static int getValueByKnob(int minimum, int maximum, int step_size, int initial, const char *prefix, const char *postfix)
 {
@@ -51,7 +63,7 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
   printLine2(bBuf);
   active_delay(300);
 
-  while (!btnDown() && digitalRead(PIN_PTT) == HIGH)
+  while (!btnDown() && !pttOn())
   {
 
     knob = enc_read();
@@ -76,7 +88,7 @@ static int getValueByKnob(int minimum, int maximum, int step_size, int initial, 
 
 // # Menu: 1
 
-static void menuBand(int btn)
+static void menuBand(bool btn)
 {
   int knob = 0;
 
@@ -91,9 +103,8 @@ static void menuBand(int btn)
 
   printLine2("Band Select:");
   // wait for the button menu select button to be lifted)
-  while (btnDown())
-    active_delay(50);
-  active_delay(50);
+  waitForBtnUp();
+
   ritDisable();
 
   while (!btnDown())
@@ -126,9 +137,7 @@ static void menuBand(int btn)
     active_delay(20);
   }
 
-  while (btnDown())
-    active_delay(50);
-  active_delay(50);
+  waitForBtnUp();
 
   printLine2("");
   updateDisplay();
@@ -136,18 +145,18 @@ static void menuBand(int btn)
 }
 
 // Menu #2
-void menuRitToggle(int btn)
+static void menuRitToggle(bool btn)
 {
   if (!btn)
   {
-    if (settings.ritOn == 1)
+    if (settings.ritOn)
       printLine2("RIT On \x7E Off");
     else
       printLine2("RIT Off \x7E On");
   }
   else
   {
-    if (settings.ritOn == 0)
+    if (!settings.ritOn)
     {
       // enable RIT so the current frequency is used at transmit
       ritEnable(settings.frequency);
@@ -166,7 +175,7 @@ void menuRitToggle(int btn)
 }
 
 // Menu #3
-void menuVfoToggle(int btn)
+void menuVfoToggle(bool btn)
 {
 
   if (!btn)
@@ -219,7 +228,7 @@ void menuVfoToggle(int btn)
 }
 
 // Menu #4
-void menuSidebandToggle(int btn)
+static void menuSidebandToggle(bool btn)
 {
   if (!btn)
   {
@@ -260,7 +269,7 @@ void menuSidebandToggle(int btn)
 
 // Split communication using VFOA and VFOB by KD8CEC
 // Menu #5
-static void menuSplitToggle(int btn)
+static void menuSplitToggle(bool btn)
 {
   if (!btn)
   {
@@ -279,8 +288,7 @@ static void menuSplitToggle(int btn)
     else
     {
       settings.splitOn = true;
-      if (settings.ritOn == 1)
-        settings.ritOn = 0;
+      settings.ritOn = false;
       printLine2("Split Off");
     }
     active_delay(500);
@@ -290,7 +298,7 @@ static void menuSplitToggle(int btn)
   }
 }
 
-static void menuCWSpeed(int btn)
+static void menuCWSpeed(bool btn)
 {
   int wpm;
 
@@ -306,36 +314,6 @@ static void menuCWSpeed(int btn)
     return;
   }
 
-  /*
-      printLine1("Press FN to Set");
-      strcpy(b, "5:CW>");
-      itoa(wpm,c, 10);
-      strcat(b, c);
-      strcat(b, " WPM");
-      printLine2(b);
-      active_delay(300);
-
-      while(!btnDown() && digitalRead(PTT) == HIGH){
-
-        knob = enc_read();
-        if (knob != 0){
-          if (wpm > 3 && knob < 0)
-            wpm--;
-          if (wpm < 50 && knob > 0)
-            wpm++;
-
-          strcpy(b, "5:CW>");
-          itoa(wpm,c, 10);
-          strcat(b, c);
-          strcat(b, " WPM");
-          printLine2(b);
-        }
-        //abort if this button is down
-        if (btnDown())
-          //re-enable the clock1 and clock 2
-          break;
-        checkCAT()
-    */
   wpm = getValueByKnob(1, 100, 1, wpm, "CW: ", " WPM>");
 
   printLine2("CW Speed set!");
@@ -348,9 +326,8 @@ static void menuCWSpeed(int btn)
   menuOn = 0;
 }
 
-void menuExit(int btn)
+static void menuExit(bool btn)
 {
-
   if (!btn)
   {
     printLine2("Exit Menu      \x7E");
@@ -369,7 +346,7 @@ void menuExit(int btn)
  * The calibration routines are not normally shown in the menu as they are rarely used
  * They can be enabled by choosing this menu option
  */
-int menuSetup(int btn)
+int menuSetup(bool btn)
 {
   if (!btn)
   {
@@ -391,9 +368,7 @@ int menuSetup(int btn)
       printLine2("Settings Off");
     }
 
-    while (btnDown())
-      active_delay(100);
-    active_delay(500);
+    waitForBtnUp();
     printLine2("");
     return 10;
   }
@@ -401,7 +376,6 @@ int menuSetup(int btn)
 }
 
 // this is used by the si5351 routines in the ubitx_5351 file
-extern int32_t calibration;
 extern uint32_t si5351bx_vcoa;
 
 void calibrateClock()
@@ -409,50 +383,47 @@ void calibrateClock()
   int knob = 0;
 
   // keep clear of any previous button press
-  while (btnDown()) {
-    active_delay(100);
-  }
-  active_delay(100);
+  waitForBtnUp();
 
   digitalWrite(PIN_TX_LPF_A, 0);
   digitalWrite(PIN_TX_LPF_B, 0);
   digitalWrite(PIN_TX_LPF_C, 0);
 
-  calibration = 0;
+  settings.pllCalibration = 0;
 
   settings.isUSB = true;
 
   // turn off the second local oscillator and the bfo
-  si5351_set_calibration(calibration);
+  si5351_set_calibration(settings.pllCalibration);
   startTx(TX_CW);
   si5351bx_setfreq(2, 10000000l);
 
   strcpy(bBuf, "#1 10 MHz cal:");
-  ltoa(calibration / 8750, cBuf, 10);
+  ltoa(settings.pllCalibration / 8750, cBuf, 10);
   strcat(bBuf, cBuf);
   printLine2(bBuf);
 
   while (!btnDown())
   {
 
-    if (digitalRead(PIN_PTT) == LOW && !settings.keyDown)
+    if (pttOn() && !settings.keyDown)
       cwKeydown();
-    if (digitalRead(PIN_PTT) == HIGH && settings.keyDown)
+    if (!pttOn() && settings.keyDown)
       cwKeyUp();
 
     knob = enc_read();
 
     if (knob > 0)
-      calibration += 875;
+      settings.pllCalibration += 875;
     else if (knob < 0)
-      calibration -= 875;
+      settings.pllCalibration -= 875;
     else
       continue; // don't update the frequency or the display
 
-    si5351_set_calibration(calibration);
+    si5351_set_calibration(settings.pllCalibration);
     si5351bx_setfreq(2, 10000000l);
     strcpy(bBuf, "#1 10 MHz cal:");
-    ltoa(calibration / 8750, cBuf, 10);
+    ltoa(settings.pllCalibration / 8750, cBuf, 10);
     strcat(bBuf, cBuf);
     printLine2(bBuf);
   }
@@ -462,18 +433,15 @@ void calibrateClock()
   stopTx();
 
   printLine2("Calibration set!");
-  EEPROM.put(MASTER_CAL, calibration);
-  initOscillators();
+  EEPROM.put(MASTER_CAL, settings.pllCalibration);
+  initOscillators(settings.pllCalibration);
   setFrequency(settings.frequency);
   updateDisplay();
 
-  while (btnDown()) {
-    active_delay(50);
-  }
-  active_delay(100);
+  waitForBtnUp();
 }
 
-static void menuSetupCalibration(int btn)
+static void menuSetupCalibration(bool btn)
 {
   if (!btn)
   {
@@ -503,7 +471,7 @@ static void printCarrierFreq(uint32_t freq)
   printLine2(cBuf);
 }
 
-void menuSetupCarrier(int btn)
+void menuSetupCarrier(bool btn)
 {
   int knob = 0;
 
@@ -550,7 +518,7 @@ void menuSetupCarrier(int btn)
   menuOn = 0;
 }
 
-static void menuSetupCwTone(int btn)
+static void menuSetupCwTone(bool btn)
 {
   int knob = 0;
   int prev_sideTone;
@@ -568,7 +536,7 @@ static void menuSetupCwTone(int btn)
   tone(PIN_CW_TONE, settings.sideTone);
 
   // disable all clock 1 and clock 2
-  while (digitalRead(PIN_PTT) == HIGH && !btnDown())
+  while (!pttOn() && !btnDown())
   {
     knob = enc_read();
 
@@ -588,9 +556,9 @@ static void menuSetupCwTone(int btn)
   }
   noTone(PIN_CW_TONE);
   // save the setting
-  if (digitalRead(PIN_PTT) == LOW)
+  if (pttOn())
   {
-    printLine2("settings.Sidetone set!    ");
+    printLine2("Sidetone set!    ");
     EEPROM.put(CW_SIDETONE, settings.sideTone);
     active_delay(2000);
   }
@@ -602,7 +570,7 @@ static void menuSetupCwTone(int btn)
   menuOn = 0;
 }
 
-static void menuSetupCwDelay(int btn)
+static void menuSetupCwDelay(bool btn)
 {
   if (!btn)
   {
@@ -620,7 +588,7 @@ static void menuSetupCwDelay(int btn)
   menuOn = 0;
 }
 
-static void menuSetupKeyer(int btn)
+static void menuSetupKeyer(bool btn)
 {
   int tmp_key, knob;
 
@@ -689,7 +657,7 @@ static void menuSetupKeyer(int btn)
   menuOn = 0;
 }
 
-static void menuReadADC(int btn)
+static void menuReadADC(bool btn)
 {
   int adc;
 
@@ -713,19 +681,16 @@ static void menuReadADC(int btn)
 
 void doMenu()
 {
-  int select = 0, i, btnState;
+  int select = 0;
 
-  // wait for the button to be raised up
-  while (btnDown())
-    active_delay(50);
-  active_delay(50); // debounce
+  waitForBtnUp();
 
   menuOn = 2;
 
   while (menuOn)
   {
-    i = enc_read();
-    btnState = btnDown();
+    int i = enc_read();
+    bool btnState = btnDown();
 
     if (i > 0)
     {
@@ -734,8 +699,14 @@ void doMenu()
       if (!modeCalibrate && select + i < 80)
         select += i;
     }
-    if (i < 0 && select - i >= 0)
+    else
+    {
       select += i; // caught ya, i is already -ve here, so you add it
+      if (select < 0)
+      {
+        select = 0;
+      }
+    }
 
     if (select < 10)
       menuBand(btnState);
@@ -769,10 +740,6 @@ void doMenu()
       menuExit(btnState);
   }
 
-  // debounce the button
-  while (btnDown())
-    active_delay(50);
-  active_delay(50);
-
+  waitForBtnUp();
   checkCAT();
 }

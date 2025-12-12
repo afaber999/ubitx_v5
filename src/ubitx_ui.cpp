@@ -31,15 +31,6 @@ void initDisplay()
   lcd.clear();
 }
 
-// returns true if the button is pressed
-int btnDown()
-{
-  if (digitalRead(PIN_FBUTTON) == HIGH)
-    return 0;
-  else
-    return 1;
-}
-
 /**
  * Meter (not used in this build for anything)
  * the meter is drawn using special characters. Each character is composed of 5 x 8 matrix.
@@ -145,129 +136,72 @@ void updateDisplay()
 
   if (settings.inTx)
   {
+    cBuf[0] = ' ';
+    cBuf[1] = ' ';
+    cBuf[2] = ' ';
     if (settings.cwTimeout > 0)
-      strcpy(cBuf, "   CW:");
+    {
+      cBuf[3] = 'C';
+      cBuf[4] = 'W';
+      cBuf[5] = ':';
+    }
     else
-      strcpy(cBuf, "   TX:");
+    {
+      cBuf[3] = 'T';
+      cBuf[4] = 'X';
+      cBuf[5] = ':';
+    }
   }
   else
   {
     if (settings.ritOn)
-      strcpy(cBuf, "RIT ");
+    {
+      cBuf[0] = 'R';
+      cBuf[1] = 'I';
+      cBuf[2] = 'T';
+    }
     else
     {
-      if (settings.isUSB)
-        strcpy(cBuf, "USB ");
-      else
-        strcpy(cBuf, "LSB ");
+      cBuf[0] = (settings.isUSB) ? 'U' : 'L';
+      cBuf[1] = 'S';
+      cBuf[2] = 'B';
     }
-    if (settings.vfoActive == VFO_A) // VFO A is active
-      strcat(cBuf, "A:");
-    else
-      strcat(cBuf, "B:");
+    cBuf[3] = ' ';
+    cBuf[4] = (settings.vfoActive == VFO_A) ? 'A' : 'B';
+    cBuf[5] = ':';
   }
 
   // one mhz digit if less than 10 M, two digits if more
   if (settings.frequency < 10000000l)
   {
-    cBuf[6] = ' ';
-    cBuf[7] = bBuf[0];
-    strcat(cBuf, ".");
-    strncat(cBuf, &bBuf[1], 3);
-    strcat(cBuf, ".");
-    strncat(cBuf, &bBuf[4], 3);
+    cBuf[ 6] = ' ';
+    cBuf[ 7] = bBuf[0];
+    cBuf[ 8] = '.';
+    cBuf[ 9] = bBuf[1];
+    cBuf[10] = bBuf[2];
+    cBuf[11] = bBuf[3];
+    cBuf[12] = '.';
+    cBuf[13] = bBuf[4];
+    cBuf[14] = bBuf[5];
+    cBuf[15] = bBuf[6];
   }
   else
   {
-    strncat(cBuf, bBuf, 2);
-    strcat(cBuf, ".");
-    strncat(cBuf, &bBuf[2], 3);
-    strcat(cBuf, ".");
-    strncat(cBuf, &bBuf[5], 3);
+    cBuf[ 6] = bBuf[0];
+    cBuf[ 7] = bBuf[1];
+    cBuf[ 8] = '.';
+    cBuf[ 9] = bBuf[2];
+    cBuf[10] = bBuf[3];
+    cBuf[11] = bBuf[4];
+    cBuf[12] = '.';
+    cBuf[13] = bBuf[5];
+    cBuf[14] = bBuf[6];
+    cBuf[15] = bBuf[67];
   }
 
-  if (settings.inTx)
-    strcat(cBuf, " TX");
+  // AF TODO CHECK OUTSIDE LCD PRINT LIMITS
+  // if (settings.inTx)
+  //   strcat(cBuf, " TX");
   printLine(1, cBuf);
 
-  /*
-    //now, the second line
-    memset(c, 0, sizeof(c));
-    memset(b, 0, sizeof(b));
-
-    if (settings.inTx)
-      strcat(c, "TX ");
-    else if (settings.ritOn)
-      strcpy(c, "RIT");
-
-    strcpy(c, "      \xff");
-    drawMeter(settings.meter_reading);
-    strcat(c, meter);
-    strcat(c, "\xff");
-    printLine2(c);*/
-}
-
-int enc_prev_state = 3;
-
-/**
- * The A7 And A6 are purely analog lines on the Arduino Nano
- * These need to be pulled up externally using two 10 K resistors
- *
- * There are excellent pages on the Internet about how these encoders work
- * and how they should be used. We have elected to use the simplest way
- * to use these encoders without the complexity of interrupts etc to
- * keep it understandable.
- *
- * The enc_state returns a two-bit number such that each bit reflects the current
- * value of each of the two phases of the encoder
- *
- * The enc_read returns the number of net pulses counted over 50 msecs.
- * If the puluses are -ve, they were anti-clockwise, if they are +ve, the
- * were in the clockwise directions. Higher the pulses, greater the speed
- * at which the enccoder was spun
- */
-
-uint8_t enc_state(void)
-{
-  return (analogRead(PIN_ENC_A) > 500 ? 1 : 0) + (analogRead(PIN_ENC_B) > 500 ? 2 : 0);
-}
-
-int enc_read(void)
-{
-  int result = 0;
-  uint8_t newState;
-  int enc_speed = 0;
-
-  uint32_t stop_by = millis() + 50;
-
-  while (millis() < stop_by)
-  {                         // check if the previous state was stable
-    newState = enc_state(); // Get current state
-
-    if (newState != enc_prev_state)
-      delay(1);
-
-    if (enc_state() != newState || newState == enc_prev_state)
-      continue;
-    // these transitions point to the encoder being rotated anti-clockwise
-    if ((enc_prev_state == 0 && newState == 2) ||
-        (enc_prev_state == 2 && newState == 3) ||
-        (enc_prev_state == 3 && newState == 1) ||
-        (enc_prev_state == 1 && newState == 0))
-    {
-      result--;
-    }
-    // these transitions point o the enccoder being rotated clockwise
-    if ((enc_prev_state == 0 && newState == 1) ||
-        (enc_prev_state == 1 && newState == 3) ||
-        (enc_prev_state == 3 && newState == 2) ||
-        (enc_prev_state == 2 && newState == 0))
-    {
-      result++;
-    }
-    enc_prev_state = newState; // Record state for next pulse interpretation
-    enc_speed++;
-    active_delay(1);
-  }
-  return (result);
 }
